@@ -57,7 +57,7 @@
                     <h3 class="mb-0">Generate Your Course</h3>
                 </div>
                 <div class="card-body p-4">
-                    <form action="/generate" method="post">
+                    <form action="/generate" method="post" id="courseGenerationForm">
                         <div class="mb-4">
                             <label for="topic" class="form-label fw-semibold">Course Topic</label>
                             <input type="text" class="form-control form-control-lg" id="topic" name="topic" required
@@ -101,13 +101,13 @@
                         </div>
                         
                         <div class="mb-4 form-check">
-                            <input type="checkbox" class="form-check-input" id="terms" required>
+                            <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
                             <label class="form-check-label" for="terms">
                                 I understand that this service uses my API key and I will be charged based on my usage.
                             </label>
                         </div>
                         
-                        <button type="submit" class="btn btn-primary btn-lg w-100 py-3">
+                        <button type="submit" class="btn btn-primary btn-lg w-100 py-3" id="generateButton">
                             <i class="bi bi-lightning-charge me-2"></i> Generate Course
                         </button>
                     </form>
@@ -145,75 +145,193 @@
     </div>
 </div>
 
+<!-- API Key Error Modal -->
+<div class="modal fade" id="apiKeyErrorModal" tabindex="-1" aria-labelledby="apiKeyErrorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="apiKeyErrorModalLabel">API Key Format Issue</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-start">
+                    <div class="me-3">
+                        <i class="bi bi-shield-exclamation text-danger fs-1"></i>
+                    </div>
+                    <div>
+                        <p><strong>Project-scoped API keys are not compatible with Skillstack.</strong></p>
+                        <p>Project-scoped keys (starting with "sk-proj-") cannot be used with this service. Please use a standard API key that starts with "sk-" followed by at least 32 characters.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="https://platform.openai.com/api-keys" class="btn btn-outline-primary" target="_blank">
+                    <i class="bi bi-key-fill me-1"></i> Get Standard API Key
+                </a>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+    .api-key-error {
+        margin-top: 0.5rem;
+        border-left: 4px solid #dc3545;
+        padding: 1rem;
+        background-color: rgba(220, 53, 69, 0.1);
+        border-radius: 0.25rem;
+    }
+    
+    .input-validation-error {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+    }
+</style>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-      const courseForm = document.querySelector('form[action="/generate"]');
-      
-      if (courseForm) {
-        courseForm.addEventListener('submit', function(e) {
-          e.preventDefault();
-          
-          // Define validation rules
-          const validationRules = [
-            {
-              field: 'topic',
-              validations: [
-                { type: 'required', message: 'Please enter a course topic' },
-                { type: 'minLength', min: 3, message: 'Topic must be at least 3 characters' }
-              ]
-            },
-            {
-              field: 'api_key',
-              validations: [
-                { type: 'required', message: 'API key is required' },
-                { 
-                  type: 'pattern', 
-                  pattern: /^sk-[a-zA-Z0-9]{32,}$/, 
-                  message: 'Please enter a valid API key (should start with "sk-")' 
-                }
-              ]
-            },
-            {
-              field: 'terms',
-              validations: [
-                { 
-                  type: 'custom', 
-                  validator: (value) => document.getElementById('terms').checked,
-                  message: 'You must accept the terms' 
-                }
-              ]
+        const form = document.getElementById('courseGenerationForm');
+        const apiKeyInput = document.getElementById('api_key');
+        const generateButton = document.getElementById('generateButton');
+        
+        // API key validation function
+        function validateApiKey(key) {
+            if (!key) {
+                return { isValid: false, message: 'API key is required' };
             }
-          ];
-          
-          // Validate form
-          const { isValid, errors } = window.errorHandler.validateForm(courseForm, validationRules);
-          
-          if (isValid) {
-            // Show loading state
-            const submitButton = courseForm.querySelector('button[type="submit"]');
-            const originalText = submitButton.innerHTML;
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing...';
             
-            // Submit form
-            courseForm.submit();
-          } else {
-            // Display toast with error summary if multiple errors
-            if (Object.keys(errors).length > 1) {
-              window.errorHandler.showErrorToast('Please fix the errors in the form to continue.');
+            // Check for project-scoped keys (incompatible format)
+            if (key.startsWith('sk-proj-')) {
+                return { 
+                    isValid: false, 
+                    message: 'Project-scoped API keys (sk-proj-*) are not compatible with this service.',
+                    type: 'format',
+                    isProjectScoped: true
+                };
             }
-          }
+            
+            // Check for other incompatible formats
+            if (!key.startsWith('sk-') || key.length < 35) {
+                return { 
+                    isValid: false, 
+                    message: 'Invalid API key format. API keys should start with "sk-" followed by at least 32 characters.',
+                    type: 'format'
+                };
+            }
+            
+            return { isValid: true };
+        }
+        
+        // Show API key error
+        function showApiKeyError(result) {
+            // Remove any existing error messages
+            clearApiKeyError();
+            
+            // Mark input as invalid
+            apiKeyInput.classList.add('input-validation-error');
+            
+            if (result.isProjectScoped) {
+                // Show modal for project-scoped keys
+                const apiKeyErrorModal = new bootstrap.Modal(document.getElementById('apiKeyErrorModal'));
+                apiKeyErrorModal.show();
+            }
+            
+            // Create error container
+            const errorContainer = document.createElement('div');
+            errorContainer.id = 'api-key-error';
+            errorContainer.className = 'api-key-error';
+            
+            errorContainer.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle-fill me-2" style="color: #dc3545;"></i>
+                    <span>${result.message}</span>
+                </div>
+            `;
+            
+            // Add error after input group
+            const inputGroup = apiKeyInput.closest('.input-group');
+            inputGroup.insertAdjacentElement('afterend', errorContainer);
+        }
+        
+        // Clear API key error
+        function clearApiKeyError() {
+            apiKeyInput.classList.remove('input-validation-error');
+            const existingError = document.getElementById('api-key-error');
+            if (existingError) {
+                existingError.remove();
+            }
+        }
+        
+        // Live validation on API key input
+        apiKeyInput.addEventListener('input', function() {
+            const value = this.value.trim();
+            if (value) {
+                const result = validateApiKey(value);
+                if (!result.isValid) {
+                    showApiKeyError(result);
+                } else {
+                    clearApiKeyError();
+                }
+            } else {
+                clearApiKeyError();
+            }
         });
-      }
-      
-      // Initialize image error handlers
-      document.querySelectorAll('img').forEach(img => {
-        window.errorHandler.handleResourceError(
-          img, 
-          '/static/thumbnails/default-thumbnail.png',
-          'Image not available'
-        );
-      });
+        
+        // Form submission handler
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            // Validate topic
+            const topic = document.getElementById('topic');
+            if (!topic.value.trim()) {
+                e.preventDefault();
+                topic.classList.add('input-validation-error');
+                isValid = false;
+            } else {
+                topic.classList.remove('input-validation-error');
+            }
+            
+            // Validate API key
+            const apiKey = apiKeyInput.value.trim();
+            const validation = validateApiKey(apiKey);
+            
+            if (!validation.isValid) {
+                e.preventDefault();
+                showApiKeyError(validation);
+                isValid = false;
+            }
+            
+            // Validate terms
+            const terms = document.getElementById('terms');
+            if (!terms.checked) {
+                e.preventDefault();
+                isValid = false;
+                
+                // Show terms error
+                const termsContainer = terms.closest('.form-check');
+                terms.classList.add('is-invalid');
+                
+                const termsError = document.createElement('div');
+                termsError.className = 'invalid-feedback';
+                termsError.textContent = 'You must accept the terms to continue';
+                termsContainer.appendChild(termsError);
+            } else {
+                terms.classList.remove('is-invalid');
+                const existingError = terms.closest('.form-check').querySelector('.invalid-feedback');
+                if (existingError) {
+                    existingError.remove();
+                }
+            }
+            
+            if (isValid) {
+                // Show loading state
+                generateButton.disabled = true;
+                generateButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing...';
+            }
+        });
     });
-  </script>
+</script>
 {% endblock %}

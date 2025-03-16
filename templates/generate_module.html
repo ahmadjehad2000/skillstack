@@ -102,186 +102,210 @@
 {% endblock %}
 
 {% block extra_js %}
+<style>
+    .api-key-error {
+        margin-top: 0.5rem;
+        border-left: 4px solid #dc3545;
+        padding: 1rem;
+        background-color: rgba(220, 53, 69, 0.1);
+        border-radius: 0.25rem;
+    }
+    
+    .input-validation-error {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+    }
+</style>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('generateModuleForm');
         const loadingSpinner = document.getElementById('loadingSpinner');
         const errorMessage = document.getElementById('errorMessage');
         const generateButton = document.getElementById('generateButton');
+        const apiKeyInput = document.getElementById('api_key');
         
-        // Network connection monitoring
-        let isOnline = navigator.onLine;
-        
-        window.addEventListener('online', () => {
-            isOnline = true;
-            const networkErrorEl = document.querySelector('.network-error-overlay');
-            if (networkErrorEl) networkErrorEl.remove();
-        });
-        
-        window.addEventListener('offline', () => {
-            isOnline = false;
-            showNetworkError();
-        });
-        
-        function showNetworkError() {
-            // Create network error overlay
-            const overlay = document.createElement('div');
-            overlay.className = 'network-error-overlay';
-            overlay.innerHTML = `
-                <div class="network-error-content">
-                    <div class="mb-4 text-danger">
-                        <i class="bi bi-wifi-off" style="font-size: 3rem;"></i>
-                    </div>
-                    <h4 class="mb-3">Connection Lost</h4>
-                    <p class="mb-4">Your internet connection appears to be offline. Skillstack requires an active connection to generate course content.</p>
-                    <button class="btn btn-primary retry-connection">
-                        <i class="bi bi-arrow-repeat me-2"></i> Retry Connection
-                    </button>
-                </div>
-            `;
-            
-            document.body.appendChild(overlay);
-            
-            // Add retry handler
-            overlay.querySelector('.retry-connection').addEventListener('click', function() {
-                this.innerHTML = '<i class="bi bi-arrow-repeat me-2 retry-animation"></i> Checking connection...';
-                
-                // Simple connection test
-                fetch('/api/ping', { method: 'GET', cache: 'no-store' })
-                    .then(() => {
-                        isOnline = true;
-                        overlay.remove();
-                    })
-                    .catch(() => {
-                        this.innerHTML = '<i class="bi bi-arrow-repeat me-2"></i> Retry Connection';
-                        window.errorHandler.showErrorToast('Still unable to connect. Please check your internet connection.');
-                    });
-            });
-        }
-        
-        // Validate API key format
+        // API key validation function
         function validateApiKey(key) {
-            return /^sk-[a-zA-Z0-9]{32,}$/.test(key);
+            if (!key) {
+                return { isValid: false, message: 'API key is required' };
+            }
+            
+            // Check for project-scoped keys (incompatible format)
+            if (key.startsWith('sk-proj-')) {
+                return { 
+                    isValid: false, 
+                    message: 'Project-scoped API keys (sk-proj-*) are not compatible with this service. Please use a standard API key.',
+                    type: 'format',
+                    isProjectScoped: true
+                };
+            }
+            
+            // Check for other incompatible formats
+            if (!key.startsWith('sk-') || key.length < 35) {
+                return { 
+                    isValid: false, 
+                    message: 'Invalid API key format. API keys should start with "sk-" followed by at least 32 characters.',
+                    type: 'format'
+                };
+            }
+            
+            return { isValid: true };
         }
         
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                // Check network connection first
-                if (!isOnline) {
-                    showNetworkError();
-                    return;
-                }
-                
-                // Get API key and validate
-                const apiKey = document.getElementById('api_key').value.trim();
-                const terms = document.getElementById('terms').checked;
-                
-                // Validate inputs
-                let isValid = true;
-                
-                if (!apiKey) {
-                    window.errorHandler.showFieldError(
-                        document.getElementById('api_key'), 
-                        'API key is required'
-                    );
-                    isValid = false;
-                } else if (!validateApiKey(apiKey)) {
-                    window.errorHandler.showFieldError(
-                        document.getElementById('api_key'), 
-                        'Please enter a valid API key (should start with "sk-")'
-                    );
-                    isValid = false;
-                } else {
-                    window.errorHandler.clearFieldError(document.getElementById('api_key'));
-                }
-                
-                if (!terms) {
-                    window.errorHandler.showErrorToast('Please accept the terms to continue.');
-                    isValid = false;
-                }
-                
-                if (!isValid) return;
-                
-                // Show loading spinner
-                loadingSpinner.classList.remove('d-none');
-                form.classList.add('d-none');
-                errorMessage.classList.add('d-none');
-                
-                // Prepare form data
-                const formData = new FormData();
-                formData.append('api_key', apiKey);
-                
-                // Request timeout handling
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 60000); // 1 minute timeout
-                
-                // Send request with timeout
-                fetch('/generate_module/{{ job_id }}/{{ module_index }}', {
-                    method: 'POST',
-                    body: formData,
-                    signal: controller.signal
-                })
-                .then(response => {
-                    clearTimeout(timeoutId);
-                    
-                    if (!response.ok) {
-                        // Handle HTTP error responses
-                        return response.json().then(data => {
-                            throw new Error(data.error || `Error ${response.status}: ${response.statusText}`);
-                        });
-                    }
-                    
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.error) {
-                        throw new Error(data.error);
-                    } else {
-                        // Redirect to module view
-                        window.location.href = '/view_module/{{ job_id }}/{{ module_index }}';
-                    }
-                })
-                .catch(error => {
-                    clearTimeout(timeoutId);
-                    
-                    if (error.name === 'AbortError') {
-                        errorMessage.textContent = 'Request timed out. The server is taking too long to respond.';
-                    } else if (error.name === 'TypeError' && error.message.includes('NetworkError')) {
-                        showNetworkError();
-                        errorMessage.textContent = 'Network error. Please check your internet connection.';
-                    } else {
-                        errorMessage.innerHTML = `
-                            <div class="error-section">
-                                <div class="error-title">
-                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                    Generation Failed
-                                </div>
-                                <div class="error-message">${error.message}</div>
-                                <div class="error-actions">
-                                    <button type="button" class="btn btn-sm btn-outline-danger retry-generation">
-                                        <i class="bi bi-arrow-repeat me-1"></i> Try Again
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                        
-                        // Add retry handler
-                        const retryButton = errorMessage.querySelector('.retry-generation');
-                        if (retryButton) {
-                            retryButton.addEventListener('click', function() {
-                                errorMessage.classList.add('d-none');
-                                form.classList.remove('d-none');
-                            });
-                        }
-                    }
-                    
-                    errorMessage.classList.remove('d-none');
-                    loadingSpinner.classList.add('d-none');
-                });
-            });
+        // Show API key error
+        function showApiKeyError(result) {
+            // Remove any existing error messages
+            clearApiKeyError();
+            
+            // Mark input as invalid
+            apiKeyInput.classList.add('input-validation-error');
+            
+            // Create error container
+            const errorContainer = document.createElement('div');
+            errorContainer.id = 'api-key-error';
+            errorContainer.className = 'api-key-error';
+            
+            if (result.isProjectScoped) {
+                errorContainer.innerHTML = `
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <i class="bi bi-shield-exclamation" style="font-size: 1.5rem; color: #dc3545;"></i>
+                        </div>
+                        <div>
+                            <div class="fw-semibold mb-1">Project-scoped API Key Not Supported</div>
+                            <p class="mb-2 small">Project-scoped keys (starting with "sk-proj-") are not compatible with this service.</p>
+                            <a href="https://platform.openai.com/api-keys" class="btn btn-sm btn-outline-danger" target="_blank">
+                                <i class="bi bi-key-fill me-1"></i> Get Standard API Key
+                            </a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                errorContainer.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill me-2" style="color: #dc3545;"></i>
+                        <span>${result.message}</span>
+                    </div>
+                `;
+            }
+            
+            // Add error after input group
+            const inputGroup = apiKeyInput.closest('.input-group');
+            inputGroup.insertAdjacentElement('afterend', errorContainer);
         }
+        
+        // Clear API key error
+        function clearApiKeyError() {
+            apiKeyInput.classList.remove('input-validation-error');
+            const existingError = document.getElementById('api-key-error');
+            if (existingError) {
+                existingError.remove();
+            }
+        }
+        
+        // Live validation on API key input
+        apiKeyInput.addEventListener('input', function() {
+            const value = this.value.trim();
+            if (value) {
+                const result = validateApiKey(value);
+                if (!result.isValid) {
+                    showApiKeyError(result);
+                } else {
+                    clearApiKeyError();
+                }
+            } else {
+                clearApiKeyError();
+            }
+        });
+        
+        // Form submission handler
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validate API key
+            const apiKey = apiKeyInput.value.trim();
+            const validation = validateApiKey(apiKey);
+            
+            if (!validation.isValid) {
+                showApiKeyError(validation);
+                return;
+            }
+            
+            // Validate terms checkbox
+            const termsChecked = document.getElementById('terms').checked;
+            if (!termsChecked) {
+                errorMessage.textContent = 'Please accept the terms to continue.';
+                errorMessage.classList.remove('d-none');
+                return;
+            }
+            
+            // Hide error message if previously shown
+            errorMessage.classList.add('d-none');
+            
+            // Show loading spinner
+            loadingSpinner.classList.remove('d-none');
+            form.classList.add('d-none');
+            
+            // Get form data
+            const formData = new FormData();
+            formData.append('api_key', apiKey);
+            
+            // Send request with timeout handling
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 60000);
+            
+            fetch('/generate_module/{{ job_id }}/{{ module_index }}', {
+                method: 'POST',
+                body: formData,
+                signal: controller.signal
+            })
+            .then(response => {
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || `Error ${response.status}: ${response.statusText}`);
+                    });
+                }
+                
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Redirect to module view
+                window.location.href = '/view_module/{{ job_id }}/{{ module_index }}';
+            })
+            .catch(error => {
+                clearTimeout(timeoutId);
+                
+                // Handle abort/timeout
+                if (error.name === 'AbortError') {
+                    errorMessage.textContent = 'Request timed out. The server is taking too long to respond.';
+                } else {
+                    // Show detailed error
+                    errorMessage.innerHTML = `
+                        <div class="d-flex align-items-start">
+                            <div class="me-3">
+                                <i class="bi bi-exclamation-circle-fill text-danger fs-4"></i>
+                            </div>
+                            <div>
+                                <div class="fw-semibold mb-1">Generation Failed</div>
+                                <p class="mb-0">${error.message}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Show error and form again
+                errorMessage.classList.remove('d-none');
+                loadingSpinner.classList.add('d-none');
+                form.classList.remove('d-none');
+            });
+        });
     });
 </script>
 {% endblock %}
