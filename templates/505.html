@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="mb-4">
+                <i class="bi bi-exclamation-circle display-1 text-danger"></i>
+            </div>
+            <h1 class="mb-4">500 - Server Error</h1>
+            <p class="lead mb-4">Something went wrong on our end. The team has been notified and we're working to fix the issue.</p>
+            <a href="/" class="btn btn-primary btn-lg">
+                <i class="bi bi-house me-2"></i> Return to Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

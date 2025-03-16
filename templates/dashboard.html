@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Your Courses Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="mb-3">Your Courses Dashboard</h1>
+            <p class="lead">View and manage all your generated courses</p>
+        </div>
+        <div class="col-auto d-flex align-items-center">
+            <a href="/" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-2"></i> Create New Course
+            </a>
+        </div>
+    </div>
+    
+    {% if jobs|length == 0 %}
+        <div class="text-center py-5">
+            <i class="bi bi-folder2-open display-1 text-muted mb-3"></i>
+            <h3>No courses yet</h3>
+            <p class="text-muted">You haven't generated any courses yet.</p>
+            <a href="/" class="btn btn-primary mt-3">Create Your First Course</a>
+        </div>
+    {% else %}
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for job in jobs %}
+                <div class="col">
+                    <div class="card h-100 course-card">
+                        {% if job.status == 'completed' and job.course.thumbnail_path %}
+                            <div class="thumbnail-container">
+                                <img src="{{ job.course.thumbnail_path }}" class="card-img-top" alt="{{ job.course.title }}" onerror="this.src='/static/thumbnails/default-thumbnail.png'">
+                            </div>
+                        {% else %}
+                            <div class="card-img-top bg-light d-flex justify-content-center align-items-center" style="height: 180px;">
+                                {% if job.status == 'queued' or job.status == 'processing' %}
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                {% elif job.status == 'failed' %}
+                                    <i class="bi bi-exclamation-circle text-danger display-4"></i>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title">
+                                    {% if job.status == 'completed' %}
+                                        {{ job.course.title }}
+                                    {% else %}
+                                        {{ job.topic }} Course
+                                    {% endif %}
+                                </h5>
+                                
+                                <span class="badge rounded-pill 
+                                    {% if job.status == 'completed' %}bg-success
+                                    {% elif job.status == 'failed' %}bg-danger
+                                    {% elif job.status == 'processing' %}bg-primary
+                                    {% else %}bg-warning{% endif %}">
+                                    {{ job.status.capitalize() }}
+                                </span>
+                            </div>
+                            
+                            <p class="card-text">
+                                {% if job.status == 'completed' %}
+                                    {{ job.course.description[:100] }}...
+                                {% else %}
+                                    {{ job.topic }} ({{ job.level }})
+                                {% endif %}
+                            </p>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <small class="text-muted">{{ job.created }}</small>
+                                
+                                <div>
+                                    {% if job.status == 'completed' %}
+                                        <a href="/view/{{ job.id }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                    {% elif job.status == 'failed' %}
+                                        <a href="/" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-arrow-clockwise"></i> Retry
+                                        </a>
+                                    {% else %}
+                                        <a href="/status/{{ job.id }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-arrow-clockwise"></i> Check
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

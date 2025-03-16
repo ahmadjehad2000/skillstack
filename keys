@@ -1,0 +1,55 @@
+# CourseGen AI Project Overview
+
+## Project Description
+CourseGen AI is a sophisticated educational content generation system that combines OpenAI's GPT-4o and Stable Diffusion to create comprehensive, ready-to-use courses on any topic. The system generates a single, high-quality comprehensive lesson with all necessary educational components including assessments, examples, and visual elements.
+
+## Key Components
+
+### 1. Course Content Generation
+- Uses OpenAI's GPT-4o for high-quality educational content
+- Implements robust anti-hallucination measures to prevent nonsensical content
+- Generates structured markdown content with proper formatting
+- Creates assessment questions with multiple-choice and scenario-based options
+
+### 2. Visual Content Generation
+- Uses Stable Diffusion for course thumbnail generation
+- Optimized for GTX 1050 Ti GPU with 4GB VRAM
+- Implements multiple fallback mechanisms for image generation
+- Adds professional text overlay to thumbnails
+
+### 3. Web Application
+- Flask-based web interface for easy course generation
+- Dashboard for managing generated courses
+- Real-time course generation status updates
+- Ability to download courses in JSON format
+
+## Technical Architecture
+
+- **Backend**: Python with Flask web framework
+- **AI Models**: OpenAI API for text, Stable Diffusion for images
+- **UI**: Bootstrap-based responsive interface with dynamic content loading
+- **Storage**: File-based storage for generated content and thumbnails
+- **Deployment**: Optimized for Windows environment with relative path handling
+
+## Notable Features
+
+1. **Anti-Hallucination System**: Sophisticated content filtering that prevents repetitive or nonsensical content generation through:
+   - Enhanced prompting techniques
+   - Post-processing filters for detecting repetition patterns
+   - Specialized handling for problematic content sections
+
+2. **Memory Optimization**: Careful management of GPU resources to work within 4GB VRAM constraints:
+   - Dynamic model loading/unloading
+   - Optimized image generation parameters
+   - Multi-stage fallback system for thumbnail creation
+
+3. **Single-Lesson Format**: Consolidated course structure that delivers a comprehensive masterclass on any topic rather than multiple small lessons, focusing on quality over quantity.
+
+## Current Status
+The project is functional with all major components working. Recent improvements include:
+- Fixing hallucination issues in generated content
+- Implementing improved assessment question generation with checkbox formatting
+- Enhancing error handling for more stable operation
+- Optimizing thumbnail generation for reliable operation on limited GPU memory
+
+The code is well-documented with extensive error handling and fallback mechanisms to ensure reliable operation even under suboptimal conditions.

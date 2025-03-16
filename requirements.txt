@@ -1,0 +1,11 @@
+flask
+flask-session
+openai
+diffusers
+transformers
+pillow
+numpy
+werkzeug
+markupsafe
+waitress
+dotenv

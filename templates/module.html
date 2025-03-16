@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.title }} - {{ module.title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/github.min.css">
+<style>
+    .lesson-nav {
+        position: sticky;
+        top: 20px;
+    }
+    .lesson-nav .nav-link {
+        padding: 0.5rem 1rem;
+        border-radius: 0;
+        border-left: 3px solid transparent;
+    }
+    .lesson-nav .nav-link.active {
+        background-color: rgba(13, 110, 253, 0.1);
+        border-left-color: #0d6efd;
+        font-weight: 500;
+    }
+    .markdown-content h1 { font-size: 1.75rem; margin-top: 1.5rem; }
+    .markdown-content h2 { font-size: 1.5rem; margin-top: 1.4rem; }
+    .markdown-content h3 { font-size: 1.3rem; margin-top: 1.3rem; }
+    .markdown-content h4 { font-size: 1.2rem; margin-top: 1.2rem; }
+    .markdown-content h5 { font-size: 1.1rem; margin-top: 1.1rem; }
+    .markdown-content h6 { font-size: 1rem; margin-top: 1rem; }
+    .markdown-content pre {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.25rem;
+        overflow-x: auto;
+    }
+    .markdown-content blockquote {
+        border-left: 0.25rem solid #ced4da;
+        padding-left: 1rem;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="/view/{{ job_id }}">{{ course.title }}</a></li>
+            <li class="breadcrumb-item active">{{ module.title }}</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <div class="col-lg-3">
+            <div class="lesson-nav card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Course Content</h5>
+                </div>
+                <div class="card-body p-0">
+                    <nav class="nav flex-column">
+                        <a class="nav-link" href="#introduction">Introduction</a>
+                        {% for lesson in module.lessons %}
+                            <a class="nav-link" href="#lesson-{{ loop.index }}">
+                                {{ lesson.title }}
+                            </a>
+                        {% endfor %}
+                        <a class="nav-link" href="#assessment">Assessment</a>
+                    </nav>
+                </div>
+            </div>
+            
+            <div class="d-grid gap-2">
+                <a href="/view/{{ job_id }}" class="btn btn-outline-primary mb-2">
+                    <i class="bi bi-arrow-left me-2"></i> Back to Course
+                </a>
+            </div>
+        </div>
+        
+        <div class="col-lg-9">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">{{ module.title }}</h3>
+                </div>
+                <div class="card-body">
+                    <section id="introduction">
+                        <h4 class="mb-3">Introduction</h4>
+                        <div class="markdown-content">
+                            {{ module.introduction | safe }}
+                        </div>
+                    </section>
+                </div>
+            </div>
+            
+            {% for lesson in module.lessons %}
+                <div class="card mb-4" id="lesson-{{ loop.index }}">
+                    <div class="card-header bg-light">
+                        <h4 class="mb-0">{{ lesson.title }}</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="markdown-content">
+                            {{ lesson.content | safe }}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            
+            <div class="card mb-4" id="assessment">
+                <div class="card-header bg-light">
+                    <h4 class="mb-0">
+                        <i class="bi bi-question-circle-fill text-primary me-2"></i>
+                        Assessment
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="markdown-content bg-light p-3 rounded">
+                        {% if module.lessons %}
+                            {{ module.lessons[0].assessment | safe }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@4.2.4/marked.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Highlight code blocks
+        document.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightBlock(block);
+        });
+        
+        // Active navigation based on scroll position
+        const sections = document.querySelectorAll('section, div[id^="lesson-"], div[id="assessment"]');
+        const navLinks = document.querySelectorAll('.lesson-nav .nav-link');
+        
+        function setActiveLink() {
+            let current = '';
+            
+            sections.forEach((section) => {
+                const sectionTop = section.offsetTop;
+                if (window.scrollY >= sectionTop - 100) {
+                    current = '#' + section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach((link) => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', setActiveLink);
+        setActiveLink();
+        
+        // Process markdown in content
+        const markdownElements = document.querySelectorAll('.markdown-content');
+        markdownElements.forEach((element) => {
+            // Skip if already contains HTML elements
+            if (element.querySelector('h1, h2, h3, h4, h5, h6, p, ul, ol, pre, blockquote')) {
+                return;
+            }
+            
+            // Process markdown
+            const content = element.innerHTML;
+            if (content.includes('#') || content.includes('*') || content.includes('```')) {
+                element.innerHTML = marked.parse(content);
+                
+                // Highlight code again after markdown processing
+                element.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightBlock(block);
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

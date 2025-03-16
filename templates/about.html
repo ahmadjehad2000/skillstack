@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}About CourseGen AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h1 class="mb-4 text-center">About CourseGen AI</h1>
+            
+            <div class="card mb-5">
+                <div class="card-body">
+                    <h2 class="h4 mb-3">What is CourseGen AI?</h2>
+                    <p>CourseGen AI is a powerful web application that uses artificial intelligence to generate complete, ready-to-teach courses on any topic. By leveraging OpenAI's GPT models for content creation and Stable Diffusion for thumbnail generation, we provide educators, trainers, and content creators with a tool to rapidly develop professional educational content.</p>
+                    
+                    <h2 class="h4 mb-3 mt-4">How It Works</h2>
+                    <ol>
+                        <li class="mb-2"><strong>Input Your Topic:</strong> Simply enter the subject you want to teach, select the difficulty level, and provide your OpenAI API key.</li>
+                        <li class="mb-2"><strong>AI-Powered Generation:</strong> Our system creates a comprehensive course with detailed content that covers all aspects of your topic.</li>
+                        <li class="mb-2"><strong>Custom Thumbnail:</strong> An eye-catching thumbnail is generated that represents your course topic.</li>
+                        <li class="mb-2"><strong>Detailed Content:</strong> You get a single comprehensive lesson covering fundamental concepts, methodology, exercises, and assessments.</li>
+                        <li><strong>Ready to Use:</strong> Download your complete course in JSON format, ready to import into your learning management system.</li>
+                    </ol>
+                    
+                    <h2 class="h4 mb-3 mt-4">Technologies Used</h2>
+                    <ul>
+                        <li><strong>OpenAI GPT-4o:</strong> State-of-the-art language model for high-quality course content</li>
+                        <li><strong>Stable Diffusion:</strong> AI image generation for custom course thumbnails</li>
+                        <li><strong>Python & Flask:</strong> Robust backend for processing and managing course generation</li>
+                        <li><strong>Bootstrap:</strong> Responsive, modern user interface</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+                <div class="col">
+                    <div class="card h-100 text-center">
+                        <div class="card-body">
+                            <i class="bi bi-speedometer2 text-primary display-4 mb-3"></i>
+                            <h3 class="h5">Time-Saving</h3>
+                            <p class="card-text">Generate complete courses in minutes instead of weeks of manual work.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card h-100 text-center">
+                        <div class="card-body">
+                            <i class="bi bi-gear-wide-connected text-primary display-4 mb-3"></i>
+                            <h3 class="h5">Customizable</h3>
+                            <p class="card-text">Tailor difficulty levels and focus areas to your specific needs.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card h-100 text-center">
+                        <div class="card-body">
+                            <i class="bi bi-award text-primary display-4 mb-3"></i>
+                            <h3 class="h5">Professional Quality</h3>
+                            <p class="card-text">Generate well-structured, comprehensive educational content.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0">Frequently Asked Questions</h2>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h3 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    How much does it cost to use CourseGen AI?
+                                </button>
+                            </h3>
+                            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    CourseGen AI is free to use, but it requires your OpenAI API key to generate content. You will be charged by OpenAI based on your API usage. Typically, a complete course generation costs between $0.50 and $3.00 in API credits, depending on the course complexity and length.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h3 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    Is my OpenAI API key secure?
+                                </button>
+                            </h3>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    We do not store your OpenAI API key. It is used only for the current request and is not saved on our servers. For added security, we recommend using an API key with usage limits set in your OpenAI dashboard.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h3 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    What formats can I export my courses in?
+                                </button>
+                            </h3>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Currently, we support exporting your courses in JSON format, which can be easily parsed and imported into various learning management systems. We plan to add more export formats in the future, including HTML, PDF, and direct LMS integrations.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h3 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                    Can I edit the generated content?
+                                </button>
+                            </h3>
+                            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Currently, the web interface does not support direct editing. However, you can download the course JSON and modify it as needed. We recommend using the generated content as a solid foundation that you can then customize and enhance based on your specific requirements.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item active">{{ course.title }}</li>
+                </ol>
+            </nav>
+            
+            <h1 class="mb-3">{{ course.title }}</h1>
+            
+            <div class="mb-4">
+                <span class="badge bg-primary">{{ course.level.capitalize() }}</span>
+                <span class="badge bg-secondary">{{ course.topic }}</span>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5><i class="bi bi-info-circle-fill text-primary me-2"></i> Course Description</h5>
+                    <p>{{ course.description }}</p>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-check-circle-fill text-success me-2"></i> Learning Objectives</h5>
+                </div>
+                <div class="card-body">
+                    {{ course.learning_objectives | safe }}
+                </div>
+            </div>
+            
+            <h3 class="mb-3">Course Content</h3>
+            
+            <div class="alert alert-info mb-4">
+                <i class="bi bi-lightbulb-fill me-2"></i>
+                This is a single-lesson comprehensive masterclass covering all aspects of {{ course.topic }}.
+            </div>
+            
+            <div class="accordion mb-5" id="moduleAccordion">
+                {% for module in course.modules %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading{{ loop.index }}">
+                            <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" 
+                                    data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}">
+                                {{ module.title }}
+                            </button>
+                        </h2>
+                        <div id="collapse{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" 
+                             data-bs-parent="#moduleAccordion">
+                            <div class="accordion-body">
+                                {% if module.lessons %}
+                                    <ul class="list-group mb-3">
+                                        {% for lesson in module.lessons %}
+                                            <li class="list-group-item">
+                                                <i class="bi bi-journal-text me-2 text-primary"></i>
+                                                {{ lesson }}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                                
+                                <div class="d-flex justify-content-end mt-3">
+                                    <a href="/view_module/{{ job_id }}/{{ loop.index0 }}" class="btn btn-primary">
+                                        <i class="bi bi-book me-2"></i> View Course Content
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <div class="d-flex justify-content-between mt-4">
+                <a href="/dashboard" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left me-2"></i> Back to Dashboard
+                </a>
+                
+                <a href="/download/{{ job_id }}" class="btn btn-primary">
+                    <i class="bi bi-download me-2"></i> Download Course JSON
+                </a>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-body">
+                    {% if course.thumbnail_path %}
+                        <img src="{{ course.thumbnail_path }}" alt="{{ course.title }}" class="img-fluid rounded mb-3" onerror="this.src='/static/thumbnails/default-thumbnail.png'">
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <h5 class="mb-2">Course Stats</h5>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Format:</span>
+                            <span class="badge bg-primary rounded-pill">Comprehensive Masterclass</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Lessons:</span>
+                            <span class="badge bg-primary rounded-pill">
+                                {% set total_lessons = 0 %}
+                                {% for module in course.modules %}
+                                    {% set total_lessons = total_lessons + module.lessons|length %}
+                                {% endfor %}
+                                {{ total_lessons }}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Difficulty:</span>
+                            <span class="badge bg-secondary rounded-pill">{{ course.level.capitalize() }}</span>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-3">
+                    
+                    <div class="alert alert-info mb-3">
+                        <i class="bi bi-lightbulb-fill me-2"></i>
+                        Click "View Course Content" to see your comprehensive lesson with all course material.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

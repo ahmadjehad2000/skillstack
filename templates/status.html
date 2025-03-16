@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Course Generation Status{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">Course Generation Status</h3>
+                    <a href="/dashboard" class="btn btn-sm btn-light">
+                        <i class="bi bi-grid"></i> Dashboard
+                    </a>
+                </div>
+                <div class="card-body text-center" id="status-container">
+                    {% if job.status == 'queued' %}
+                        <div class="py-4">
+                            <div class="spinner-border text-primary loading-spinner mb-3" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <h4>Your course is in the queue</h4>
+                            <p class="text-muted">We'll start generating your {{ job.topic }} course soon.</p>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                You can leave this page and check your dashboard later.
+                            </div>
+                        </div>
+                    {% elif job.status == 'processing' %}
+                        <div class="py-4">
+                            <div class="spinner-border text-primary loading-spinner mb-3" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <h4>Generating your course</h4>
+                            <p class="text-muted">Creating course content and thumbnail for "{{ job.topic }}"</p>
+                            <div class="progress course-progress mb-3">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 75%"></div>
+                            </div>
+                            <p class="small text-muted">This typically takes 2-5 minutes depending on complexity</p>
+                        </div>
+                    {% elif job.status == 'completed' %}
+                        <div class="py-4">
+                            <div class="mb-3 text-success">
+                                <i class="bi bi-check-circle display-1"></i>
+                            </div>
+                            <h4>Course Generated Successfully!</h4>
+                            <p>Your {{ job.course.level }} level course on {{ job.topic }} is ready.</p>
+                            
+                            {% if job.course.thumbnail_path %}
+                                <div class="my-4">
+                                    <img src="{{ job.course.thumbnail_path }}" alt="{{ job.course.title }}" class="img-fluid rounded shadow" style="max-height: 300px;" onerror="this.src='/static/thumbnails/default-thumbnail.png'">
+                                </div>
+                            {% endif %}
+                            
+                            <div class="d-grid gap-2 col-md-8 mx-auto mt-4">
+                                <a href="/view/{{ job.id }}" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-eye me-2"></i> View Course
+                                </a>
+                                <a href="/download/{{ job.id }}" class="btn btn-outline-primary">
+                                    <i class="bi bi-download me-2"></i> Download JSON
+                                </a>
+                            </div>
+                        </div>
+                    {% elif job.status == 'failed' %}
+                        <div class="py-4">
+                            <div class="mb-3 text-danger">
+                                <i class="bi bi-exclamation-circle display-1"></i>
+                            </div>
+                            <h4>Generation Failed</h4>
+                            <p>We encountered an error while generating your course.</p>
+                            <div class="alert alert-danger mx-auto my-3" style="max-width: 500px;">
+                                <p><strong>Error:</strong> {{ job.error }}</p>
+                            </div>
+                            <a href="/" class="btn btn-primary mt-3">
+                                <i class="bi bi-arrow-counterclockwise me-2"></i> Try Again
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if job.status == 'queued' or job.status == 'processing' %}
+<script>
+    // Auto-refresh the status page
+    function checkStatus() {
+        fetch('/api/status/{{ job.id }}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status !== '{{ job.status }}') {
+                    window.location.reload();
+                }
+            });
+    }
+    
+    // Check every 5 seconds
+    setInterval(checkStatus, 5000);
+</script>
+{% endif %}
+{% endblock %}

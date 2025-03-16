@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}CourseGen AI - Generate Courses with AI{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-4 fw-bold mb-3">Create Complete Courses with AI</h1>
+        <p class="lead mb-4">Generate professional course content and thumbnails with GPT-4o and Stable Diffusion</p>
+        <a href="#generate-form" class="btn btn-light btn-lg px-4 me-2">Create Your Course</a>
+        <a href="/about" class="btn btn-outline-light btn-lg px-4">Learn More</a>
+    </div>
+</section>
+
+<div class="container mb-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 course-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-lightning-charge text-primary display-4 mb-3"></i>
+                    <h3 class="card-title h4">Fast & Professional</h3>
+                    <p class="card-text">Generate comprehensive course content in minutes instead of weeks with cutting-edge AI.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 course-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-image text-primary display-4 mb-3"></i>
+                    <h3 class="card-title h4">Custom Thumbnails</h3>
+                    <p class="card-text">Create professional course thumbnails that match your content and attract students.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 course-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-layout-text-window text-primary display-4 mb-3"></i>
+                    <h3 class="card-title h4">Detailed Content</h3>
+                    <p class="card-text">Get a single comprehensive lesson with exercises, examples, and assessments.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5" id="generate-form">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Generate Your Course</h3>
+                </div>
+                <div class="card-body">
+                    <form action="/generate" method="post">
+                        <div class="mb-3">
+                            <label for="topic" class="form-label">Course Topic</label>
+                            <input type="text" class="form-control" id="topic" name="topic" required
+                                placeholder="Enter a specific topic (e.g., Python Data Visualization, Digital Marketing)">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="level" class="form-label">Difficulty Level</label>
+                            <select class="form-select" id="level" name="level">
+                                <option value="beginner">Beginner</option>
+                                <option value="intermediate" selected>Intermediate</option>
+                                <option value="advanced">Advanced</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="quality" class="form-label">Quality Setting</label>
+                            <select class="form-select" id="quality" name="quality">
+                                <option value="high" selected>High (GPT-4o, Better Content)</option>
+                                <option value="standard">Standard (GPT-3.5, Faster Generation)</option>
+                            </select>
+                            <div class="form-text">
+                                High quality uses GPT-4o for better content but costs more credits.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="api_key" class="form-label">OpenAI API Key</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control api-key-input" id="api_key" name="api_key" required
+                                    placeholder="sk-...">
+                                <button class="btn btn-outline-secondary api-key-toggle" type="button">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                Your API key is used only for this request and is not stored.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                I understand that this service uses my OpenAI API key and I will be charged based on token usage.
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-magic me-2"></i> Generate Course
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
