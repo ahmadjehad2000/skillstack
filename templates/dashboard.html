@@ -1,36 +1,44 @@
 {% extends "base.html" %}
 
-{% block title %}Your Courses Dashboard{% endblock %}
+{% block title %}Your Courses Dashboard | Skillstack{% endblock %}
 
 {% block content %}
 <div class="container py-5">
-    <div class="row mb-4">
-        <div class="col">
-            <h1 class="mb-3">Your Courses Dashboard</h1>
-            <p class="lead">View and manage all your generated courses</p>
+    <div class="row mb-4 align-items-center">
+        <div class="col-lg-6">
+            <h1 class="mb-2">Your Courses Dashboard</h1>
+            <p class="lead text-muted">Manage and access all your generated courses</p>
         </div>
-        <div class="col-auto d-flex align-items-center">
-            <a href="/" class="btn btn-primary">
+        <div class="col-lg-6 d-flex justify-content-lg-end mt-3 mt-lg-0">
+            <a href="/" class="btn btn-primary btn-lg">
                 <i class="bi bi-plus-lg me-2"></i> Create New Course
             </a>
         </div>
     </div>
     
     {% if jobs|length == 0 %}
-        <div class="text-center py-5">
-            <i class="bi bi-folder2-open display-1 text-muted mb-3"></i>
-            <h3>No courses yet</h3>
-            <p class="text-muted">You haven't generated any courses yet.</p>
-            <a href="/" class="btn btn-primary mt-3">Create Your First Course</a>
+        <div class="text-center py-5 my-5">
+            <div class="mb-4">
+                <i class="bi bi-folder2-open" style="font-size: 5rem; color: #dee2e6;"></i>
+            </div>
+            <h3 class="h4 mb-3">No courses yet</h3>
+            <p class="text-muted mb-4">Start creating your first course with Skillstack</p>
+            <a href="/" class="btn btn-primary btn-lg px-5">
+                <i class="bi bi-lightning-charge me-2"></i>
+                Create Your First Course
+            </a>
         </div>
     {% else %}
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
             {% for job in jobs %}
                 <div class="col">
                     <div class="card h-100 course-card">
                         {% if job.status == 'completed' and job.course.thumbnail_path %}
                             <div class="thumbnail-container">
-                                <img src="{{ job.course.thumbnail_path }}" class="card-img-top" alt="{{ job.course.title }}" onerror="this.src='/static/thumbnails/default-thumbnail.png'">
+                                <img src="{{ job.course.thumbnail_path }}" alt="{{ job.course.title }}" onerror="this.src='/static/thumbnails/default-thumbnail.png'">
+                                <div class="thumbnail-overlay">
+                                    <span class="badge rounded-pill bg-light text-dark mb-2">{{ job.course.level.capitalize() }}</span>
+                                </div>
                             </div>
                         {% else %}
                             <div class="card-img-top bg-light d-flex justify-content-center align-items-center" style="height: 180px;">
@@ -39,7 +47,7 @@
                                         <span class="visually-hidden">Loading...</span>
                                     </div>
                                 {% elif job.status == 'failed' %}
-                                    <i class="bi bi-exclamation-circle text-danger display-4"></i>
+                                    <i class="bi bi-exclamation-circle text-danger" style="font-size: 3rem;"></i>
                                 {% endif %}
                             </div>
                         {% endif %}
@@ -63,9 +71,9 @@
                                 </span>
                             </div>
                             
-                            <p class="card-text">
+                            <p class="card-text text-muted">
                                 {% if job.status == 'completed' %}
-                                    {{ job.course.description[:100] }}...
+                                    {{ job.course.description[:100] }}{% if job.course.description|length > 100 %}...{% endif %}
                                 {% else %}
                                     {{ job.topic }} ({{ job.level }})
                                 {% endif %}
@@ -76,16 +84,16 @@
                                 
                                 <div>
                                     {% if job.status == 'completed' %}
-                                        <a href="/view/{{ job.id }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i> View
+                                        <a href="/view/{{ job.id }}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-eye-fill me-1"></i> View
                                         </a>
                                     {% elif job.status == 'failed' %}
                                         <a href="/" class="btn btn-sm btn-outline-danger">
-                                            <i class="bi bi-arrow-clockwise"></i> Retry
+                                            <i class="bi bi-arrow-clockwise me-1"></i> Retry
                                         </a>
                                     {% else %}
                                         <a href="/status/{{ job.id }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-arrow-clockwise"></i> Check
+                                            <i class="bi bi-arrow-clockwise me-1"></i> Check
                                         </a>
                                     {% endif %}
                                 </div>
@@ -94,6 +102,20 @@
                     </div>
                 </div>
             {% endfor %}
+        </div>
+        
+        <div class="card bg-light border-0 my-4">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center">
+                    <div class="me-4">
+                        <i class="bi bi-lightbulb-fill text-warning" style="font-size: 2rem;"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-1">Course Management Tips</h5>
+                        <p class="mb-0">Click "View" to access your completed courses. From there, you can download course content in JSON format or view the detailed content modules.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     {% endif %}
 </div>

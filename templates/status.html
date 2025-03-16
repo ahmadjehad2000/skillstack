@@ -1,50 +1,79 @@
 {% extends "base.html" %}
 
-{% block title %}Course Generation Status{% endblock %}
+{% block title %}Course Generation Status | Skillstack{% endblock %}
 
 {% block content %}
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-8">
             <div class="card shadow">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
                     <h3 class="mb-0">Course Generation Status</h3>
-                    <a href="/dashboard" class="btn btn-sm btn-light">
-                        <i class="bi bi-grid"></i> Dashboard
+                    <a href="/dashboard" class="btn btn-sm btn-light d-flex align-items-center">
+                        <i class="bi bi-grid me-2"></i> Dashboard
                     </a>
                 </div>
-                <div class="card-body text-center" id="status-container">
+                <div class="card-body p-4 text-center" id="status-container">
                     {% if job.status == 'queued' %}
-                        <div class="py-4">
-                            <div class="spinner-border text-primary loading-spinner mb-3" role="status">
+                        <div class="py-5">
+                            <div class="spinner-border text-primary loading-spinner mb-4" role="status">
                                 <span class="visually-hidden">Loading...</span>
                             </div>
-                            <h4>Your course is in the queue</h4>
-                            <p class="text-muted">We'll start generating your {{ job.topic }} course soon.</p>
-                            <div class="alert alert-info">
-                                <i class="bi bi-info-circle me-2"></i>
-                                You can leave this page and check your dashboard later.
+                            <h4 class="mb-2">Your course is in the queue</h4>
+                            <p class="text-muted mb-4">We'll start generating your {{ job.topic }} course soon.</p>
+                            <div class="alert alert-info d-inline-flex align-items-center mx-auto" style="max-width: 400px;">
+                                <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+                                <div class="text-start">
+                                    You can leave this page and check your dashboard later. We'll save your course once it's complete.
+                                </div>
                             </div>
                         </div>
                     {% elif job.status == 'processing' %}
-                        <div class="py-4">
-                            <div class="spinner-border text-primary loading-spinner mb-3" role="status">
+                        <div class="py-5">
+                            <div class="spinner-border text-primary loading-spinner mb-4" role="status">
                                 <span class="visually-hidden">Loading...</span>
                             </div>
-                            <h4>Generating your course</h4>
-                            <p class="text-muted">Creating course content and thumbnail for "{{ job.topic }}"</p>
-                            <div class="progress course-progress mb-3">
-                                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 75%"></div>
+                            <h4 class="mb-2">Generating your course</h4>
+                            <p class="text-muted mb-4">Creating comprehensive course content for "{{ job.topic }}"</p>
+                            
+                            <div class="mb-4 mx-auto" style="max-width: 500px;">
+                                <div class="progress course-progress mb-3">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 75%"></div>
+                                </div>
+                                
+                                <div id="generationSteps" class="text-start mb-4">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        <span>Analyzing topic requirements</span>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        <span>Generating course structure</span>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="bi bi-arrow-repeat text-primary me-2 spin"></i>
+                                        <span>Creating detailed course content</span>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-2 text-muted">
+                                        <i class="bi bi-circle me-2"></i>
+                                        <span>Generating assessment questions</span>
+                                    </div>
+                                    <div class="d-flex align-items-center text-muted">
+                                        <i class="bi bi-circle me-2"></i>
+                                        <span>Creating course thumbnail</span>
+                                    </div>
+                                </div>
                             </div>
+                            
                             <p class="small text-muted">This typically takes 2-5 minutes depending on complexity</p>
                         </div>
                     {% elif job.status == 'completed' %}
-                        <div class="py-4">
-                            <div class="mb-3 text-success">
-                                <i class="bi bi-check-circle display-1"></i>
+                        <div class="py-5">
+                            <div class="mb-4 text-success">
+                                <i class="bi bi-check-circle-fill" style="font-size: 5rem;"></i>
                             </div>
-                            <h4>Course Generated Successfully!</h4>
-                            <p>Your {{ job.course.level }} level course on {{ job.topic }} is ready.</p>
+                            <h4 class="mb-3">Course Generated Successfully!</h4>
+                            <p class="mb-4">Your {{ job.course.level }} level course on {{ job.topic }} is ready to view.</p>
                             
                             {% if job.course.thumbnail_path %}
                                 <div class="my-4">
@@ -52,9 +81,9 @@
                                 </div>
                             {% endif %}
                             
-                            <div class="d-grid gap-2 col-md-8 mx-auto mt-4">
+                            <div class="d-grid gap-3 col-md-8 mx-auto mt-4">
                                 <a href="/view/{{ job.id }}" class="btn btn-primary btn-lg">
-                                    <i class="bi bi-eye me-2"></i> View Course
+                                    <i class="bi bi-eye-fill me-2"></i> View Course
                                 </a>
                                 <a href="/download/{{ job.id }}" class="btn btn-outline-primary">
                                     <i class="bi bi-download me-2"></i> Download JSON
@@ -62,25 +91,62 @@
                             </div>
                         </div>
                     {% elif job.status == 'failed' %}
-                        <div class="py-4">
-                            <div class="mb-3 text-danger">
-                                <i class="bi bi-exclamation-circle display-1"></i>
-                            </div>
-                            <h4>Generation Failed</h4>
-                            <p>We encountered an error while generating your course.</p>
-                            <div class="alert alert-danger mx-auto my-3" style="max-width: 500px;">
-                                <p><strong>Error:</strong> {{ job.error }}</p>
-                            </div>
-                            <a href="/" class="btn btn-primary mt-3">
-                                <i class="bi bi-arrow-counterclockwise me-2"></i> Try Again
+                    <div class="error-section mt-4">
+                        <div class="error-title d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Error Details
+                        </div>
+                        <div class="error-message">
+                            <div class="mb-2"><strong>Error message:</strong></div>
+                            <code class="p-3 d-block bg-light">{{ job.error }}</code>
+                        </div>
+                        <div class="error-actions mt-3">
+                            <div class="small text-muted mb-2">Common causes of generation failure:</div>
+                            <ul class="small text-muted mb-3">
+                                <li>Invalid or expired API key</li>
+                                <li>Insufficient credit in your account</li>
+                                <li>Rate limiting due to too many requests</li>
+                                <li>System overload or temporary maintenance</li>
+                            </ul>
+                            <a href="/" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-repeat me-2"></i> Try Again
                             </a>
                         </div>
+                    </div>
                     {% endif %}
                 </div>
             </div>
+            
+            {% if job.status == 'queued' or job.status == 'processing' %}
+                <div class="card bg-light border-0 mt-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="bi bi-lightbulb-fill text-warning fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-2">While You Wait</h5>
+                                <p class="mb-0">Skillstack is creating a comprehensive course that includes learning objectives, detailed content, practical exercises, and assessment questions. All content is factually verified to ensure high quality.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .spin {
+        animation: spin 1.5s linear infinite;
+    }
+</style>
 {% endblock %}
 
 {% block extra_js %}

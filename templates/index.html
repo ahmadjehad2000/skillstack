@@ -1,44 +1,49 @@
 {% extends "base.html" %}
 
-{% block title %}CourseGen AI - Generate Courses with AI{% endblock %}
+{% block title %}Skillstack - AI-Powered Course Creation{% endblock %}
 
 {% block content %}
 <section class="hero-section">
+    <div class="hero-pattern"></div>
     <div class="container text-center">
-        <h1 class="display-4 fw-bold mb-3">Create Complete Courses with AI</h1>
-        <p class="lead mb-4">Generate professional course content and thumbnails with GPT-4o and Stable Diffusion</p>
-        <a href="#generate-form" class="btn btn-light btn-lg px-4 me-2">Create Your Course</a>
-        <a href="/about" class="btn btn-outline-light btn-lg px-4">Learn More</a>
+        <h1 class="display-4 fw-bold mb-3">Transform Knowledge into Courses</h1>
+        <p class="lead mb-4">Create professional, ready-to-teach courses in minutes with Skillstack's advanced AI technology</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="#generate-form" class="btn btn-light btn-lg px-4 fw-semibold">
+                <i class="bi bi-lightning-charge-fill me-2"></i>Create Your Course
+            </a>
+            <a href="/about" class="btn btn-outline-light btn-lg px-4">Learn More</a>
+        </div>
     </div>
 </section>
 
 <div class="container mb-5">
     <div class="row g-4">
         <div class="col-md-4">
-            <div class="card h-100 course-card">
-                <div class="card-body text-center">
-                    <i class="bi bi-lightning-charge text-primary display-4 mb-3"></i>
-                    <h3 class="card-title h4">Fast & Professional</h3>
-                    <p class="card-text">Generate comprehensive course content in minutes instead of weeks with cutting-edge AI.</p>
+            <div class="card h-100 course-card text-center p-4">
+                <div class="feature-icon mx-auto">
+                    <i class="bi bi-lightning-charge"></i>
                 </div>
+                <h3 class="card-title h4 mb-3">Rapid Creation</h3>
+                <p class="card-text">Generate comprehensive course content in minutes instead of weeks with our advanced AI technology.</p>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card h-100 course-card">
-                <div class="card-body text-center">
-                    <i class="bi bi-image text-primary display-4 mb-3"></i>
-                    <h3 class="card-title h4">Custom Thumbnails</h3>
-                    <p class="card-text">Create professional course thumbnails that match your content and attract students.</p>
+            <div class="card h-100 course-card text-center p-4">
+                <div class="feature-icon mx-auto">
+                    <i class="bi bi-image"></i>
                 </div>
+                <h3 class="card-title h4 mb-3">Custom Thumbnails</h3>
+                <p class="card-text">Each course includes a professionally designed, topic-specific thumbnail that captures your content's essence.</p>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card h-100 course-card">
-                <div class="card-body text-center">
-                    <i class="bi bi-layout-text-window text-primary display-4 mb-3"></i>
-                    <h3 class="card-title h4">Detailed Content</h3>
-                    <p class="card-text">Get a single comprehensive lesson with exercises, examples, and assessments.</p>
+            <div class="card h-100 course-card text-center p-4">
+                <div class="feature-icon mx-auto">
+                    <i class="bi bi-mortarboard"></i>
                 </div>
+                <h3 class="card-title h4 mb-3">Complete Package</h3>
+                <p class="card-text">Every course includes learning objectives, comprehensive content, exercises, and assessments.</p>
             </div>
         </div>
     </div>
@@ -47,41 +52,43 @@
 <div class="container mb-5" id="generate-form">
     <div class="row justify-content-center">
         <div class="col-lg-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white py-3">
                     <h3 class="mb-0">Generate Your Course</h3>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <form action="/generate" method="post">
-                        <div class="mb-3">
-                            <label for="topic" class="form-label">Course Topic</label>
-                            <input type="text" class="form-control" id="topic" name="topic" required
+                        <div class="mb-4">
+                            <label for="topic" class="form-label fw-semibold">Course Topic</label>
+                            <input type="text" class="form-control form-control-lg" id="topic" name="topic" required
                                 placeholder="Enter a specific topic (e.g., Python Data Visualization, Digital Marketing)">
+                            <div class="form-text">Be specific to get the best results. For example, "Machine Learning" is good, but "Random Forest Algorithms" is better.</div>
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="level" class="form-label">Difficulty Level</label>
-                            <select class="form-select" id="level" name="level">
+                        <div class="mb-4">
+                            <label for="level" class="form-label fw-semibold">Difficulty Level</label>
+                            <select class="form-select form-select-lg" id="level" name="level">
                                 <option value="beginner">Beginner</option>
                                 <option value="intermediate" selected>Intermediate</option>
                                 <option value="advanced">Advanced</option>
                             </select>
+                            <div class="form-text">Choose the appropriate level for your target audience.</div>
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="quality" class="form-label">Quality Setting</label>
-                            <select class="form-select" id="quality" name="quality">
-                                <option value="high" selected>High (GPT-4o, Better Content)</option>
-                                <option value="standard">Standard (GPT-3.5, Faster Generation)</option>
+                        <div class="mb-4">
+                            <label for="quality" class="form-label fw-semibold">Quality Setting</label>
+                            <select class="form-select form-select-lg" id="quality" name="quality">
+                                <option value="high" selected>High (Premium Quality, Higher Token Usage)</option>
+                                <option value="standard">Standard (Good Quality, Faster Generation)</option>
                             </select>
                             <div class="form-text">
-                                High quality uses GPT-4o for better content but costs more credits.
+                                High quality creates more detailed and nuanced content but uses more API credits.
                             </div>
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="api_key" class="form-label">OpenAI API Key</label>
-                            <div class="input-group">
+                        <div class="mb-4">
+                            <label for="api_key" class="form-label fw-semibold">Your API Key</label>
+                            <div class="input-group input-group-lg">
                                 <input type="password" class="form-control api-key-input" id="api_key" name="api_key" required
                                     placeholder="sk-...">
                                 <button class="btn btn-outline-secondary api-key-toggle" type="button">
@@ -89,19 +96,19 @@
                                 </button>
                             </div>
                             <div class="form-text">
-                                Your API key is used only for this request and is not stored.
+                                Your API key is used only for this request and is never stored on our servers.
                             </div>
                         </div>
                         
-                        <div class="mb-3 form-check">
+                        <div class="mb-4 form-check">
                             <input type="checkbox" class="form-check-input" id="terms" required>
                             <label class="form-check-label" for="terms">
-                                I understand that this service uses my OpenAI API key and I will be charged based on token usage.
+                                I understand that this service uses my API key and I will be charged based on my usage.
                             </label>
                         </div>
                         
-                        <button type="submit" class="btn btn-primary btn-lg w-100">
-                            <i class="bi bi-magic me-2"></i> Generate Course
+                        <button type="submit" class="btn btn-primary btn-lg w-100 py-3">
+                            <i class="bi bi-lightning-charge me-2"></i> Generate Course
                         </button>
                     </form>
                 </div>
@@ -109,4 +116,104 @@
         </div>
     </div>
 </div>
+
+<div class="container mb-5">
+    <div class="card bg-light border-0">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h2 class="h3 mb-3">How Skillstack Works</h2>
+                    <p class="mb-4">Our advanced AI technology analyzes your topic and creates a comprehensive, single-lesson masterclass covering all aspects of the subject. You'll receive a complete package including learning objectives, detailed content, practical exercises, and assessment questions.</p>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="me-3 text-primary"><i class="bi bi-check-circle-fill"></i></div>
+                        <p class="mb-0">One-click course generation with your API key</p>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="me-3 text-primary"><i class="bi bi-check-circle-fill"></i></div>
+                        <p class="mb-0">Professional course thumbnails for each topic</p>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="me-3 text-primary"><i class="bi bi-check-circle-fill"></i></div>
+                        <p class="mb-0">Complete, ready-to-teach course in minutes</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-center mt-4 mt-lg-0">
+                    <i class="bi bi-layers-fill text-primary" style="font-size: 6rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const courseForm = document.querySelector('form[action="/generate"]');
+      
+      if (courseForm) {
+        courseForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          
+          // Define validation rules
+          const validationRules = [
+            {
+              field: 'topic',
+              validations: [
+                { type: 'required', message: 'Please enter a course topic' },
+                { type: 'minLength', min: 3, message: 'Topic must be at least 3 characters' }
+              ]
+            },
+            {
+              field: 'api_key',
+              validations: [
+                { type: 'required', message: 'API key is required' },
+                { 
+                  type: 'pattern', 
+                  pattern: /^sk-[a-zA-Z0-9]{32,}$/, 
+                  message: 'Please enter a valid API key (should start with "sk-")' 
+                }
+              ]
+            },
+            {
+              field: 'terms',
+              validations: [
+                { 
+                  type: 'custom', 
+                  validator: (value) => document.getElementById('terms').checked,
+                  message: 'You must accept the terms' 
+                }
+              ]
+            }
+          ];
+          
+          // Validate form
+          const { isValid, errors } = window.errorHandler.validateForm(courseForm, validationRules);
+          
+          if (isValid) {
+            // Show loading state
+            const submitButton = courseForm.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing...';
+            
+            // Submit form
+            courseForm.submit();
+          } else {
+            // Display toast with error summary if multiple errors
+            if (Object.keys(errors).length > 1) {
+              window.errorHandler.showErrorToast('Please fix the errors in the form to continue.');
+            }
+          }
+        });
+      }
+      
+      // Initialize image error handlers
+      document.querySelectorAll('img').forEach(img => {
+        window.errorHandler.handleResourceError(
+          img, 
+          '/static/thumbnails/default-thumbnail.png',
+          'Image not available'
+        );
+      });
+    });
+  </script>
 {% endblock %}

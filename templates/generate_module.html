@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Generate Module Content{% endblock %}
+{% block title %}Generate Module Content | Skillstack{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -15,37 +15,43 @@
             </nav>
             
             <div class="card shadow">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header bg-primary text-white py-3">
                     <h3 class="mb-0">Generate Module Content</h3>
                 </div>
-                <div class="card-body">
-                    <div class="alert alert-info mb-4">
-                        <i class="bi bi-info-circle-fill me-2"></i>
-                        You are about to generate detailed content for:
+                <div class="card-body p-4">
+                    <div class="alert alert-info d-flex mb-4">
+                        <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+                        <div>
+                            <strong>You are about to generate detailed content for:</strong>
+                        </div>
                     </div>
                     
-                    <div class="module-card p-3 mb-4 bg-light rounded">
-                        <h4>{{ module.title }}</h4>
-                        <p class="text-muted mb-2">This module contains {{ module.lessons|length }} lessons:</p>
+                    <div class="module-card p-4 mb-4 bg-light rounded">
+                        <h4 class="mb-3">{{ module.title }}</h4>
+                        <p class="text-muted mb-3">This module contains {{ module.lessons|length }} lessons:</p>
                         
                         <ul class="list-group mb-3">
                             {% for lesson in module.lessons %}
-                                <li class="list-group-item">
-                                    <i class="bi bi-journal-text me-2 text-primary"></i>
-                                    Lesson {{ loop.index }}: {{ lesson }}
+                                <li class="list-group-item border-0 bg-transparent ps-0 d-flex align-items-center">
+                                    <div class="me-3" style="width: 28px; height: 28px; border-radius: 50%; background-color: rgba(52, 152, 219, 0.1); display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-journal-text text-primary small"></i>
+                                    </div>
+                                    <span>Lesson {{ loop.index }}: {{ lesson }}</span>
                                 </li>
                             {% endfor %}
                         </ul>
                     </div>
                     
-                    <div class="alert alert-warning mb-4">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        Generating detailed module content will require additional API calls to OpenAI, which will incur charges to your account.
+                    <div class="alert alert-warning d-flex mb-4">
+                        <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
+                        <div>
+                            Generating detailed module content will require additional API calls, which will incur charges to your account.
+                        </div>
                     </div>
                     
                     <form id="generateModuleForm">
-                        <div class="mb-3">
-                            <label for="api_key" class="form-label">Your OpenAI API Key</label>
+                        <div class="mb-4">
+                            <label for="api_key" class="form-label fw-semibold">Your API Key</label>
                             <div class="input-group">
                                 <input type="password" class="form-control api-key-input" id="api_key" name="api_key" required
                                     placeholder="sk-...">
@@ -58,10 +64,10 @@
                             </div>
                         </div>
                         
-                        <div class="mb-3 form-check">
+                        <div class="mb-4 form-check">
                             <input type="checkbox" class="form-check-input" id="terms" required>
                             <label class="form-check-label" for="terms">
-                                I understand that this will use my OpenAI API key and I will be charged based on token usage.
+                                I understand that this will use my API key and I will be charged based on token usage.
                             </label>
                         </div>
                         
@@ -71,7 +77,7 @@
                             </a>
                             
                             <button type="submit" class="btn btn-primary" id="generateButton">
-                                <i class="bi bi-magic me-2"></i> Generate Module Content
+                                <i class="bi bi-lightning-charge me-2"></i> Generate Module Content
                             </button>
                         </div>
                     </form>
@@ -80,14 +86,14 @@
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
-                        <p class="mt-2">Generating detailed content...</p>
-                        <div class="progress course-progress">
+                        <p class="mt-3 mb-4">Generating detailed content...</p>
+                        <div class="progress course-progress mb-3">
                             <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
                         </div>
-                        <p class="small text-muted mt-2">This may take 3-5 minutes depending on module complexity</p>
+                        <p class="small text-muted mb-0">This may take 3-5 minutes depending on module complexity</p>
                     </div>
                     
-                    <div id="errorMessage" class="alert alert-danger mt-3 d-none"></div>
+                    <div id="errorMessage" class="alert alert-danger mt-4 d-none"></div>
                 </div>
             </div>
         </div>
@@ -103,44 +109,179 @@
         const errorMessage = document.getElementById('errorMessage');
         const generateButton = document.getElementById('generateButton');
         
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
+        // Network connection monitoring
+        let isOnline = navigator.onLine;
+        
+        window.addEventListener('online', () => {
+            isOnline = true;
+            const networkErrorEl = document.querySelector('.network-error-overlay');
+            if (networkErrorEl) networkErrorEl.remove();
+        });
+        
+        window.addEventListener('offline', () => {
+            isOnline = false;
+            showNetworkError();
+        });
+        
+        function showNetworkError() {
+            // Create network error overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'network-error-overlay';
+            overlay.innerHTML = `
+                <div class="network-error-content">
+                    <div class="mb-4 text-danger">
+                        <i class="bi bi-wifi-off" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 class="mb-3">Connection Lost</h4>
+                    <p class="mb-4">Your internet connection appears to be offline. Skillstack requires an active connection to generate course content.</p>
+                    <button class="btn btn-primary retry-connection">
+                        <i class="bi bi-arrow-repeat me-2"></i> Retry Connection
+                    </button>
+                </div>
+            `;
             
-            // Show loading spinner
-            loadingSpinner.classList.remove('d-none');
-            form.classList.add('d-none');
-            errorMessage.classList.add('d-none');
+            document.body.appendChild(overlay);
             
-            // Get form data
-            const formData = new FormData();
-            formData.append('api_key', document.getElementById('api_key').value);
-            
-            // Send request
-            fetch('/generate_module/{{ job_id }}/{{ module_index }}', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    // Show error
-                    errorMessage.textContent = data.error;
+            // Add retry handler
+            overlay.querySelector('.retry-connection').addEventListener('click', function() {
+                this.innerHTML = '<i class="bi bi-arrow-repeat me-2 retry-animation"></i> Checking connection...';
+                
+                // Simple connection test
+                fetch('/api/ping', { method: 'GET', cache: 'no-store' })
+                    .then(() => {
+                        isOnline = true;
+                        overlay.remove();
+                    })
+                    .catch(() => {
+                        this.innerHTML = '<i class="bi bi-arrow-repeat me-2"></i> Retry Connection';
+                        window.errorHandler.showErrorToast('Still unable to connect. Please check your internet connection.');
+                    });
+            });
+        }
+        
+        // Validate API key format
+        function validateApiKey(key) {
+            return /^sk-[a-zA-Z0-9]{32,}$/.test(key);
+        }
+        
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Check network connection first
+                if (!isOnline) {
+                    showNetworkError();
+                    return;
+                }
+                
+                // Get API key and validate
+                const apiKey = document.getElementById('api_key').value.trim();
+                const terms = document.getElementById('terms').checked;
+                
+                // Validate inputs
+                let isValid = true;
+                
+                if (!apiKey) {
+                    window.errorHandler.showFieldError(
+                        document.getElementById('api_key'), 
+                        'API key is required'
+                    );
+                    isValid = false;
+                } else if (!validateApiKey(apiKey)) {
+                    window.errorHandler.showFieldError(
+                        document.getElementById('api_key'), 
+                        'Please enter a valid API key (should start with "sk-")'
+                    );
+                    isValid = false;
+                } else {
+                    window.errorHandler.clearFieldError(document.getElementById('api_key'));
+                }
+                
+                if (!terms) {
+                    window.errorHandler.showErrorToast('Please accept the terms to continue.');
+                    isValid = false;
+                }
+                
+                if (!isValid) return;
+                
+                // Show loading spinner
+                loadingSpinner.classList.remove('d-none');
+                form.classList.add('d-none');
+                errorMessage.classList.add('d-none');
+                
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('api_key', apiKey);
+                
+                // Request timeout handling
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 60000); // 1 minute timeout
+                
+                // Send request with timeout
+                fetch('/generate_module/{{ job_id }}/{{ module_index }}', {
+                    method: 'POST',
+                    body: formData,
+                    signal: controller.signal
+                })
+                .then(response => {
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) {
+                        // Handle HTTP error responses
+                        return response.json().then(data => {
+                            throw new Error(data.error || `Error ${response.status}: ${response.statusText}`);
+                        });
+                    }
+                    
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        throw new Error(data.error);
+                    } else {
+                        // Redirect to module view
+                        window.location.href = '/view_module/{{ job_id }}/{{ module_index }}';
+                    }
+                })
+                .catch(error => {
+                    clearTimeout(timeoutId);
+                    
+                    if (error.name === 'AbortError') {
+                        errorMessage.textContent = 'Request timed out. The server is taking too long to respond.';
+                    } else if (error.name === 'TypeError' && error.message.includes('NetworkError')) {
+                        showNetworkError();
+                        errorMessage.textContent = 'Network error. Please check your internet connection.';
+                    } else {
+                        errorMessage.innerHTML = `
+                            <div class="error-section">
+                                <div class="error-title">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    Generation Failed
+                                </div>
+                                <div class="error-message">${error.message}</div>
+                                <div class="error-actions">
+                                    <button type="button" class="btn btn-sm btn-outline-danger retry-generation">
+                                        <i class="bi bi-arrow-repeat me-1"></i> Try Again
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Add retry handler
+                        const retryButton = errorMessage.querySelector('.retry-generation');
+                        if (retryButton) {
+                            retryButton.addEventListener('click', function() {
+                                errorMessage.classList.add('d-none');
+                                form.classList.remove('d-none');
+                            });
+                        }
+                    }
+                    
                     errorMessage.classList.remove('d-none');
                     loadingSpinner.classList.add('d-none');
-                    form.classList.remove('d-none');
-                } else {
-                    // Redirect to module view
-                    window.location.href = '/view_module/{{ job_id }}/{{ module_index }}';
-                }
-            })
-            .catch(error => {
-                // Show error
-                errorMessage.textContent = 'An error occurred: ' + error.message;
-                errorMessage.classList.remove('d-none');
-                loadingSpinner.classList.add('d-none');
-                form.classList.remove('d-none');
+                });
             });
-        });
+        }
     });
 </script>
 {% endblock %}

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ course.title }}{% endblock %}
+{% block title %}{{ course.title }} | Skillstack{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -16,20 +16,24 @@
             <h1 class="mb-3">{{ course.title }}</h1>
             
             <div class="mb-4">
-                <span class="badge bg-primary">{{ course.level.capitalize() }}</span>
+                <span class="badge bg-primary me-2">{{ course.level.capitalize() }}</span>
                 <span class="badge bg-secondary">{{ course.topic }}</span>
             </div>
             
             <div class="card mb-4">
                 <div class="card-body">
-                    <h5><i class="bi bi-info-circle-fill text-primary me-2"></i> Course Description</h5>
-                    <p>{{ course.description }}</p>
+                    <h5 class="d-flex align-items-center mb-3">
+                        <i class="bi bi-info-circle-fill text-primary me-2"></i>
+                        Course Description
+                    </h5>
+                    <p class="mb-0">{{ course.description }}</p>
                 </div>
             </div>
             
             <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-check-circle-fill text-success me-2"></i> Learning Objectives</h5>
+                <div class="card-header d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                    <h5 class="mb-0">Learning Objectives</h5>
                 </div>
                 <div class="card-body">
                     {{ course.learning_objectives | safe }}
@@ -38,9 +42,12 @@
             
             <h3 class="mb-3">Course Content</h3>
             
-            <div class="alert alert-info mb-4">
-                <i class="bi bi-lightbulb-fill me-2"></i>
-                This is a single-lesson comprehensive masterclass covering all aspects of {{ course.topic }}.
+            <div class="alert alert-primary mb-4 d-flex align-items-start">
+                <i class="bi bi-lightbulb-fill me-3 mt-1" style="font-size: 1.25rem;"></i>
+                <div>
+                    <strong>Comprehensive Masterclass Format</strong><br>
+                    This single-lesson masterclass covers all aspects of {{ course.topic }} in one comprehensive module.
+                </div>
             </div>
             
             <div class="accordion mb-5" id="moduleAccordion">
@@ -49,6 +56,7 @@
                         <h2 class="accordion-header" id="heading{{ loop.index }}">
                             <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" 
                                     data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}">
+                                <i class="bi bi-journal-text me-2"></i>
                                 {{ module.title }}
                             </button>
                         </h2>
@@ -58,9 +66,11 @@
                                 {% if module.lessons %}
                                     <ul class="list-group mb-3">
                                         {% for lesson in module.lessons %}
-                                            <li class="list-group-item">
-                                                <i class="bi bi-journal-text me-2 text-primary"></i>
-                                                {{ lesson }}
+                                            <li class="list-group-item border-0 ps-0 d-flex align-items-center">
+                                                <div class="me-3" style="width: 30px; height: 30px; border-radius: 50%; background-color: #e9ecef; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="bi bi-book text-primary"></i>
+                                                </div>
+                                                <span>{{ lesson }}</span>
                                             </li>
                                         {% endfor %}
                                     </ul>
@@ -92,17 +102,17 @@
             <div class="card sticky-top" style="top: 20px;">
                 <div class="card-body">
                     {% if course.thumbnail_path %}
-                        <img src="{{ course.thumbnail_path }}" alt="{{ course.title }}" class="img-fluid rounded mb-3" onerror="this.src='/static/thumbnails/default-thumbnail.png'">
+                        <img src="{{ course.thumbnail_path }}" alt="{{ course.title }}" class="img-fluid rounded mb-4" onerror="this.src='/static/thumbnails/default-thumbnail.png'">
                     {% endif %}
                     
-                    <div class="mb-3">
-                        <h5 class="mb-2">Course Stats</h5>
+                    <div class="mb-4">
+                        <h5 class="mb-3">Course Stats</h5>
                         <div class="d-flex justify-content-between mb-2">
-                            <span>Format:</span>
+                            <span class="text-muted">Format:</span>
                             <span class="badge bg-primary rounded-pill">Comprehensive Masterclass</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
-                            <span>Lessons:</span>
+                            <span class="text-muted">Lessons:</span>
                             <span class="badge bg-primary rounded-pill">
                                 {% set total_lessons = 0 %}
                                 {% for module in course.modules %}
@@ -112,16 +122,24 @@
                             </span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
-                            <span>Difficulty:</span>
+                            <span class="text-muted">Difficulty:</span>
                             <span class="badge bg-secondary rounded-pill">{{ course.level.capitalize() }}</span>
                         </div>
                     </div>
                     
-                    <hr class="my-3">
+                    <hr class="my-4">
                     
-                    <div class="alert alert-info mb-3">
-                        <i class="bi bi-lightbulb-fill me-2"></i>
-                        Click "View Course Content" to see your comprehensive lesson with all course material.
+                    <div class="alert alert-info mb-3 d-flex align-items-start">
+                        <i class="bi bi-lightbulb-fill me-3 mt-1"></i>
+                        <div>
+                            Click "View Course Content" to access your comprehensive lesson with all materials.
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <a href="/view_module/{{ job_id }}/0" class="btn btn-primary">
+                            <i class="bi bi-book me-2"></i> View Course Content
+                        </a>
                     </div>
                 </div>
             </div>
