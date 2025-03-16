@@ -1,174 +1,149 @@
-// static/js/error-handler.js
-class SkillstackErrorHandler {
-    constructor() {
-      this.errorTypes = {
-        API_ERROR: 'api',
-        VALIDATION_ERROR: 'validation',
-        AUTH_ERROR: 'auth',
-        RESOURCE_ERROR: 'resource',
-        SYSTEM_ERROR: 'system'
-      };
-      
-      window.addEventListener('error', this.handleGlobalError.bind(this));
-      window.addEventListener('unhandledrejection', this.handlePromiseRejection.bind(this));
-    }
-    
-    handleGlobalError(event) {
-      console.error('Global error:', event.error);
-      this.showErrorToast('An unexpected error occurred. Please try again.');
-      return false;
-    }
-    
-    handlePromiseRejection(event) {
-      console.error('Unhandled promise rejection:', event.reason);
-      if (event.reason && event.reason.status === 429) {
-        this.showErrorToast('API rate limit exceeded. Please try again in a few minutes.');
-      }
-      return false;
-    }
-    
-    showErrorToast(message, type = 'error', duration = 5000) {
-      let container = document.getElementById('skillstack-toast-container');
-      if (!container) {
-        container = document.createElement('div');
-        container.id = 'skillstack-toast-container';
-        container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-        container.style.zIndex = '9999';
-        document.body.appendChild(container);
+/**
+ * Global error handler for CourseGen AI application (No jQuery dependency)
+ */
+(function() {
+  // Error state tracking
+  const errorState = {
+      hasActiveError: false,
+      lastErrorTime: null
+  };
+
+  /**
+   * Display error message to user with appropriate styling
+   */
+  function showErrorMessage(message, context = 'general', targetElement = null) {
+      // Prevent error message spam
+      if (errorState.hasActiveError && 
+          (Date.now() - errorState.lastErrorTime < 5000)) {
+          return;
       }
       
-      const toastId = `toast-${Date.now()}`;
-      const toastHtml = `
-        <div id="${toastId}" class="toast align-items-center text-white bg-${type === 'error' ? 'danger' : 'warning'} border-0" role="alert" aria-live="assertive" aria-atomic="true">
-          <div class="d-flex">
-            <div class="toast-body">
-              <i class="bi bi-exclamation-triangle-fill me-2"></i>
-              ${message}
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-          </div>
-        </div>
-      `;
+      errorState.hasActiveError = true;
+      errorState.lastErrorTime = Date.now();
       
-      container.insertAdjacentHTML('beforeend', toastHtml);
+      // Create or find error container
+      let errorContainer;
       
-      const toastEl = document.getElementById(toastId);
-      const toast = new bootstrap.Toast(toastEl, { delay: duration });
-      toast.show();
-      
-      toastEl.addEventListener('hidden.bs.toast', () => {
-        toastEl.remove();
-      });
-    }
-    
-    validateApiKey(key) {
-      if (!key) {
-        return { 
-          isValid: false, 
-          message: 'API key is required'
-        };
-      }
-      
-      // Check for project-scoped keys (incompatible format)
-      if (key.startsWith('sk-proj-')) {
-        return { 
-          isValid: false, 
-          message: 'Project-scoped API keys (sk-proj-*) are not compatible with this service. Please use a standard API key that starts with "sk-".',
-          keyType: 'projectScoped'
-        };
-      }
-      
-      // Check for session keys (also incompatible)
-      if (key.startsWith('sess-')) {
-        return { 
-          isValid: false, 
-          message: 'Session-scoped keys are not supported. Please use a standard API key.',
-          keyType: 'sessionScoped'
-        };
-      }
-      
-      // Standard key validation
-      if (!key.startsWith('sk-') || key.length < 35) {
-        return { 
-          isValid: false, 
-          message: 'Invalid API key format. API keys should start with "sk-" followed by at least 32 characters.',
-          keyType: 'invalid'
-        };
-      }
-      
-      return { isValid: true, keyType: 'standard' };
-    }
-    
-    showApiKeyError(inputElement, validationResult) {
-      const formGroup = inputElement.closest('.mb-3, .mb-4, .form-group');
-      if (!formGroup) return;
-      
-      inputElement.classList.add('is-invalid');
-      
-      const existingError = formGroup.querySelector('.api-key-error-container');
-      if (existingError) existingError.remove();
-      
-      const errorContainer = document.createElement('div');
-      errorContainer.className = 'api-key-error-container alert alert-danger mt-2';
-      
-      if (validationResult.keyType === 'projectScoped') {
-        errorContainer.innerHTML = `
-          <div class="d-flex">
-            <div class="me-3">
-              <i class="bi bi-shield-exclamation fs-3"></i>
-            </div>
-            <div>
-              <strong>Project-scoped Key Not Supported</strong>
-              <p class="mb-1 mt-1">Project-scoped keys (sk-proj-*) cannot be used with this service. Please generate a standard API key.</p>
-              <a href="https://platform.openai.com/account/api-keys" class="btn btn-sm btn-outline-light mt-1" target="_blank">
-                <i class="bi bi-key me-1"></i> Get Standard API Key
-              </a>
-            </div>
-          </div>
-        `;
+      if (targetElement) {
+          // Create inline error near the specific element
+          errorContainer = document.createElement('div');
+          errorContainer.className = 'alert alert-danger mt-2 error-message';
+          errorContainer.setAttribute('role', 'alert');
+          targetElement.parentNode.insertBefore(errorContainer, targetElement.nextSibling);
       } else {
-        errorContainer.innerHTML = `
-          <div class="d-flex align-items-center">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-            <span>${validationResult.message}</span>
-          </div>
-        `;
+          // Create or use global error container
+          errorContainer = document.getElementById('global-error-container');
+          
+          if (!errorContainer) {
+              errorContainer = document.createElement('div');
+              errorContainer.id = 'global-error-container';
+              errorContainer.className = 'alert alert-danger alert-dismissible fade show fixed-top mx-auto mt-3 error-message';
+              errorContainer.style.maxWidth = '80%';
+              errorContainer.style.width = '600px';
+              errorContainer.style.zIndex = '9999';
+              errorContainer.setAttribute('role', 'alert');
+              
+              // Add close button
+              const closeButton = document.createElement('button');
+              closeButton.type = 'button';
+              closeButton.className = 'btn-close';
+              closeButton.setAttribute('data-bs-dismiss', 'alert');
+              closeButton.setAttribute('aria-label', 'Close');
+              errorContainer.appendChild(closeButton);
+              
+              document.body.appendChild(errorContainer);
+          }
       }
       
-      const inputGroup = formGroup.querySelector('.input-group');
-      inputGroup.insertAdjacentElement('afterend', errorContainer);
+      // Set error message with context
+      errorContainer.innerHTML = `<strong>Error${context !== 'general' ? ' (' + context + ')' : ''}:</strong> ${message}`;
       
-      if (validationResult.keyType === 'projectScoped') {
-        this.showErrorToast('Project-scoped API keys are not supported. Please use a standard API key.');
+      if (!targetElement) {
+          // Auto dismiss global errors after 5 seconds
+          setTimeout(() => {
+              if (errorContainer && errorContainer.parentNode) {
+                  errorContainer.remove();
+                  errorState.hasActiveError = false;
+              }
+          }, 5000);
       }
-    }
-    
-    clearApiKeyError(inputElement) {
-      inputElement.classList.remove('is-invalid');
-      const formGroup = inputElement.closest('.mb-3, .mb-4, .form-group');
-      if (formGroup) {
-        const errorContainer = formGroup.querySelector('.api-key-error-container');
-        if (errorContainer) errorContainer.remove();
-      }
-    }
   }
   
-  // Initialize the error handler
-  document.addEventListener('DOMContentLoaded', () => {
-    window.errorHandler = new SkillstackErrorHandler();
-    
-    // Add API key validation to all API key inputs
-    document.querySelectorAll('.api-key-input').forEach(input => {
-      input.addEventListener('blur', function() {
-        const value = this.value.trim();
-        if (value) {
-          const result = window.errorHandler.validateApiKey(value);
-          if (!result.isValid) {
-            window.errorHandler.showApiKeyError(this, result);
-          } else {
-            window.errorHandler.clearApiKeyError(this);
+  /**
+   * Handle AJAX errors consistently without jQuery dependency
+   */
+  function handleAjaxError(error, context = 'server', targetElement = null) {
+      console.error('AJAX Error:', error);
+      
+      let errorMessage = 'An unexpected error occurred.';
+      
+      // Extract meaningful error message based on error type
+      if (error.response) {
+          try {
+              const contentType = error.response.headers.get('content-type');
+              if (contentType && contentType.includes('application/json')) {
+                  error.response.json().then(data => {
+                      errorMessage = data.error || errorMessage;
+                      showErrorMessage(errorMessage, context, targetElement);
+                  }).catch(() => {
+                      showErrorMessage(errorMessage, context, targetElement);
+                  });
+                  return;
+              }
+          } catch (e) {
+              console.error('Error parsing response:', e);
           }
-        }
+      }
+      
+      // Handle other error types
+      if (error.message) {
+          errorMessage = error.message;
+      } else if (typeof error === 'string') {
+          errorMessage = error;
+      }
+      
+      showErrorMessage(errorMessage, context, targetElement);
+  }
+  
+  /**
+   * Setup global error handling with Fetch API support
+   */
+  function setupGlobalErrorHandling() {
+      // Handle global JS errors
+      window.addEventListener('error', function(event) {
+          console.error('Global error:', event.error);
+          // Only show UI errors for user interactions, not for script loading
+          if (event.filename && !event.filename.includes('static/js/')) {
+              showErrorMessage('JavaScript error: ' + (event.error ? event.error.message : 'Unknown error'));
+          }
       });
-    });
+      
+      // Handle unhandled promise rejections
+      window.addEventListener('unhandledrejection', function(event) {
+          console.error('Unhandled promise rejection:', event.reason);
+          if (event.reason.message) {
+              showErrorMessage('Promise error: ' + event.reason.message);
+          }
+      });
+      
+      // Optional: Enhance fetch API with error handling if needed
+      const originalFetch = window.fetch;
+      window.fetch = function(...args) {
+          return originalFetch.apply(this, args).catch(error => {
+              handleAjaxError(error);
+              throw error;
+          });
+      };
+  }
+  
+  // Initialize error handling when DOM is ready
+  document.addEventListener('DOMContentLoaded', function() {
+      setupGlobalErrorHandling();
   });
+  
+  // Export public API
+  window.ErrorHandler = {
+      showError: showErrorMessage,
+      handleAjaxError: handleAjaxError
+  };
+})();

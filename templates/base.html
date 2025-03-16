@@ -3,299 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Skillstack - AI-Powered Course Creation{% endblock %}</title>
+    <title>{% block title %}Course Generator AI{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
     <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --accent-color: #e74c3c;
-            --light-bg: #f8f9fa;
-            --dark-bg: #343a40;
-            --text-color: #212529;
-            --light-text: #f8f9fa;
-        }
-        
         body {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
         }
-        
-        .navbar {
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            background-color: white !important;
-        }
-        
         .navbar-brand {
             font-weight: 700;
-            color: var(--primary-color) !important;
-            display: flex;
-            align-items: center;
         }
-        
-        .navbar-brand-icon {
-            color: var(--secondary-color);
-            margin-right: 0.5rem;
-        }
-        
-        .nav-link {
-            font-weight: 500;
-        }
-        
-        .nav-link.active {
-            color: var(--secondary-color) !important;
-        }
-        
         .main-content {
             flex: 1;
         }
-        
         .footer {
             margin-top: auto;
             padding: 20px 0;
-            background-color: var(--light-bg);
-            border-top: 1px solid rgba(0,0,0,0.05);
+            background-color: #f8f9fa;
         }
-        
         .course-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            border: none;
-            border-radius: 0.5rem;
-            overflow: hidden;
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        
         .course-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
         }
-        
         .hero-section {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
             color: white;
-            padding: 100px 0 80px;
-            margin-bottom: 60px;
-            position: relative;
-            overflow: hidden;
+            padding: 80px 0;
+            margin-bottom: 40px;
         }
-        
-        .hero-pattern {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='rgba(255,255,255,0.05)' fill-rule='evenodd'/%3E%3C/svg%3E");
-        }
-        
         .api-key-input {
             font-family: monospace;
-            background-color: var(--light-bg);
         }
-        
         .loading-spinner {
             width: 3rem; 
             height: 3rem;
         }
-        
         .thumbnail-container {
             position: relative;
             overflow: hidden;
-            border-radius: 0.5rem;
+            border-radius: 8px;
             height: 200px;
         }
-        
         .thumbnail-container img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.3s ease;
         }
-        
-        .thumbnail-container:hover img {
-            transform: scale(1.05);
-        }
-        
         .thumbnail-overlay {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            background: rgba(0,0,0,0.7);
             color: white;
-            padding: 20px 15px 15px;
+            padding: 10px;
         }
-        
         .module-card {
-            border-left: 4px solid var(--secondary-color);
+            border-left: 4px solid #2575fc;
             transition: all 0.2s ease;
-            border-radius: 0.5rem;
-            overflow: hidden;
         }
-        
         .module-card:hover {
             border-left-width: 8px;
         }
-        
         .lesson-card {
-            border-left: 3px solid var(--accent-color);
-            border-radius: 0.5rem;
+            border-left: 3px solid #6a11cb;
         }
-        
         .course-progress {
             height: 10px;
             border-radius: 5px;
-            overflow: hidden;
         }
-        
-        .btn-primary {
-            background-color: var(--secondary-color);
-            border-color: var(--secondary-color);
-        }
-        
-        .btn-primary:hover, .btn-primary:focus {
-            background-color: #2980b9;
-            border-color: #2980b9;
-        }
-        
-        .btn-outline-primary {
-            color: var(--secondary-color);
-            border-color: var(--secondary-color);
-        }
-        
-        .btn-outline-primary:hover, .btn-outline-primary:focus {
-            background-color: var(--secondary-color);
-            border-color: var(--secondary-color);
-        }
-        
-        .card {
-            border-radius: 0.5rem;
-            border: none;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            overflow: hidden;
-        }
-        
-        .card-header {
-            background-color: white;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-            font-weight: 600;
-        }
-        
-        .bg-primary {
-            background-color: var(--secondary-color) !important;
-        }
-        
-        .text-primary {
-            color: var(--secondary-color) !important;
-        }
-        
-        .feature-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 3rem;
-            height: 3rem;
-            font-size: 1.5rem;
-            color: white;
-            border-radius: 0.5rem;
-            background-color: var(--secondary-color);
-            margin-bottom: 1rem;
-        }
-        
-        .nav-pills .nav-link.active {
-            background-color: var(--secondary-color);
-        }
-        
         @media (max-width: 768px) {
             .hero-section {
-                padding: 60px 0 40px;
+                padding: 40px 0;
             }
-        }
-
-        .toast-container {
-            z-index: 9999;
-        }
-        
-        .form-control.is-invalid {
-            background-image: none;
-            padding-right: 0.75rem;
-        }
-        
-        .invalid-feedback {
-            font-size: 0.85rem;
-            display: block;
-        }
-        
-        .error-section {
-            background-color: rgba(231, 76, 60, 0.1);
-            border-left: 4px solid #e74c3c;
-            padding: 1rem;
-            border-radius: 0.25rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .error-section .error-title {
-            color: #c0392b;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-        
-        .error-section .error-message {
-            margin-bottom: 0;
-        }
-        
-        .error-section .error-actions {
-            margin-top: 0.75rem;
-        }
-    
-        .resource-error {
-            opacity: 0.6;
-        }
-        
-        .network-error-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.7);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .network-error-content {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 0.5rem;
-            max-width: 90%;
-            width: 500px;
-            text-align: center;
-        }
-    
-        .retry-animation {
-            display: inline-block;
-            animation: spin 1.5s linear infinite;
-        }
-        
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <span class="navbar-brand-icon"><i class="bi bi-layers-fill"></i></span>
-                Skillstack
+                <i class="bi bi-mortarboard-fill text-primary me-2"></i>
+                CourseGen AI
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -321,7 +118,7 @@
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <div class="container mt-4">
+                <div class="container mt-3">
                     {% for category, message in messages %}
                         <div class="alert alert-{{ category }} alert-dismissible fade show">
                             {{ message }}
@@ -340,18 +137,22 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <p class="mb-0">&copy; 2025 Skillstack. All rights reserved.</p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <p class="mb-0">
-                        Powered by advanced AI technology
-                    </p>
+                    <p class="mb-0">&copy; 2025 CourseGen AI. All rights reserved.</p>
                 </div>
             </div>
         </div>
     </footer>
 
+    <!-- Global error container (will be populated by the error handler) -->
+    <div id="global-error-container" style="display: none;"></div>
+
+    <!-- Core Bootstrap Bundle (includes Popper) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom error handler -->
+    <script src="/static/js/error-handler.js"></script>
+    
+    <!-- API key toggle functionality -->
     <script>
         // Hide API key by default and toggle visibility
         document.addEventListener('DOMContentLoaded', function() {
@@ -370,21 +171,9 @@
                     }
                 });
             });
-            
-            // Add active class to current nav item
-            const currentPath = window.location.pathname;
-            const navLinks = document.querySelectorAll('.nav-link');
-            
-            navLinks.forEach(link => {
-                const href = link.getAttribute('href');
-                if (href === currentPath || 
-                    (href !== '/' && currentPath.startsWith(href))) {
-                    link.classList.add('active');
-                }
-            });
         });
     </script>
+    
     {% block extra_js %}{% endblock %}
-    <script src="{{ url_for('static', filename='js/error-handler.js') }}"></script>
 </body>
 </html>

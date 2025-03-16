@@ -1,4 +1,4 @@
-# app.py (updated routes and add validation function)
+# app.py
 import os
 import re
 import time
@@ -6,7 +6,6 @@ import json
 import uuid
 import secrets
 import shutil
-import logging
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, send_from_directory
 from flask_session import Session
 from werkzeug.utils import secure_filename
@@ -16,19 +15,83 @@ import torch
 from threading import Thread
 from queue import Queue
 from dotenv import load_dotenv
+import markdown
+import bleach
+from markupsafe import Markup
+
+from markdown.extensions import Extension
+from markdown.extensions.toc import TocExtension
+from markdown.extensions.codehilite import CodeHiliteExtension
+from markdown.extensions.fenced_code import FencedCodeExtension
+from markdown.extensions.tables import TableExtension
+
+# Define allowed HTML tags and attributes for security
+ALLOWED_TAGS = [
+    'a', 'abbr', 'acronym', 'b', 'blockquote', 'br', 'code', 'div', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'hr', 'i', 'img', 'li', 'ol', 'p', 'pre', 'span', 'strong', 'table', 'tbody', 'td', 'th', 'thead', 'tr', 'ul',
+    'input', 'label', 'dl', 'dt', 'dd'
+]
+
+ALLOWED_ATTRIBUTES = {
+    '*': ['class', 'id', 'style'],
+    'a': ['href', 'title', 'target'],
+    'img': ['src', 'alt', 'title', 'width', 'height'],
+    'input': ['type', 'disabled', 'checked', 'class'],
+    'td': ['colspan', 'rowspan', 'align'],
+    'th': ['colspan', 'rowspan', 'align']
+}
+
+# Custom extension for checkbox handling
+class CheckboxExtension(Extension):
+    def extendMarkdown(self, md):
+        md.preprocessors.register(CheckboxPreprocessor(), 'checkbox', 175)
+
+class CheckboxPreprocessor(markdown.preprocessors.Preprocessor):
+    def run(self, lines):
+        return [self._convert_checkboxes(line) for line in lines]
+    
+    def _convert_checkboxes(self, line):
+        line = re.sub(r'\[([ ])\]', r'<input type="checkbox" disabled> ', line)
+        line = re.sub(r'\[([xX])\]', r'<input type="checkbox" checked disabled> ', line)
+        return line
+
+def render_markdown(content):
+    """Convert markdown to HTML with proper extensions and security."""
+    if not content:
+        return ""
+    
+    # Configure Markdown with extensions
+    extensions = [
+        'markdown.extensions.extra',
+        'markdown.extensions.smarty',
+        FencedCodeExtension(),
+        CodeHiliteExtension(css_class='highlight'),
+        TableExtension(),
+        TocExtension(baselevel=1, permalink=True),
+        CheckboxExtension()
+    ]
+    
+    # Convert markdown to HTML
+    html = markdown.markdown(content, extensions=extensions)
+    
+    # Sanitize HTML for security
+    clean_html = bleach.clean(
+        html,
+        tags=ALLOWED_TAGS,
+        attributes=ALLOWED_ATTRIBUTES,
+        strip=True
+    )
+    
+    # Return safe HTML
+    return Markup(clean_html)
+
+
 
 # Load environment variables from .env file
 load_dotenv()
 
 # Import the CourseGenerator class
 from course_generator import CourseGenerator
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger('app')
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', secrets.token_hex(16))
@@ -42,7 +105,11 @@ app.config['THUMBNAIL_FOLDER'] = os.getenv('THUMBNAIL_FOLDER', 'static/thumbnail
 app.config['COURSE_FOLDER'] = os.getenv('COURSE_FOLDER', 'static/courses')
 app.config['MODULE_FOLDER'] = os.getenv('MODULE_FOLDER', 'static/modules')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload size
+# Template filter for use in Jinja templates
 
+@app.template_filter('markdown')
+def markdown_filter(text):
+    return render_markdown(text)
 # Ensure directories exist
 for folder in [app.config['UPLOAD_FOLDER'], app.config['THUMBNAIL_FOLDER'], 
                app.config['COURSE_FOLDER'], app.config['MODULE_FOLDER'], 'flask_session']:
@@ -67,25 +134,6 @@ Session(app)
 job_queue = Queue()
 job_statuses = {}
 
-def validate_api_key(api_key):
-    """Validate API key format and type before making external requests"""
-    if not api_key:
-        return False, "API key is required"
-        
-    # Check for project-scoped keys (not compatible)
-    if api_key.startswith("sk-proj-"):
-        return False, "Project-scoped API keys (sk-proj-*) are not compatible with this service. Please use a standard API key."
-    
-    # Check for other incompatible formats
-    if api_key.startswith("sess-"):
-        return False, "Session-scoped keys are not supported. Please use a standard API key."
-    
-    # Standard key format check
-    if not api_key.startswith("sk-") or len(api_key) < 35:
-        return False, "Invalid API key format. Keys should start with 'sk-' followed by at least 32 characters."
-    
-    return True, None
-
 # Process to handle background jobs
 def job_worker():
     while True:
@@ -94,14 +142,6 @@ def job_worker():
             try:
                 # Update job status
                 job_statuses[job_id]['status'] = 'processing'
-                
-                # Validate API key
-                is_valid, error_message = validate_api_key(api_key)
-                if not is_valid:
-                    job_statuses[job_id]['status'] = 'failed'
-                    job_statuses[job_id]['error'] = error_message
-                    job_queue.task_done()
-                    continue
                 
                 # Create course generator
                 course_gen = CourseGenerator(
@@ -133,7 +173,7 @@ def job_worker():
                             pass  # Ignore errors on cleanup
                         course['thumbnail_path'] = f"/static/thumbnails/{job_id}.png"
                     except Exception as copy_error:
-                        logger.error(f"Error copying thumbnail: {copy_error}")
+                        print(f"Error copying thumbnail: {copy_error}")
                         # Keep original path if copying fails
                         course['thumbnail_path'] = course['thumbnail_path'].replace("\\", "/")
                         if not course['thumbnail_path'].startswith("/"):
@@ -145,7 +185,7 @@ def job_worker():
                 job_statuses[job_id]['timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 
             except Exception as e:
-                logger.error(f"Error processing job {job_id}: {str(e)}")
+                print(f"Error processing job {job_id}: {str(e)}")
                 # Update job status with error
                 job_statuses[job_id]['status'] = 'failed'
                 job_statuses[job_id]['error'] = str(e)
@@ -154,7 +194,7 @@ def job_worker():
                 job_queue.task_done()
                 
         except Exception as worker_error:
-            logger.error(f"Worker thread error: {worker_error}")
+            print(f"Worker thread error: {worker_error}")
             # Continue processing next job even if this one fails completely
             continue
 
@@ -176,15 +216,13 @@ def generate_course():
     api_key = request.form.get('api_key', '')
     quality = request.form.get('quality', 'high')
     
-    # Validate input
+    # Basic validation
     if not topic:
         flash('Please provide a course topic', 'danger')
         return redirect(url_for('index'))
     
-    # Validate API key format before processing
-    is_valid, error_message = validate_api_key(api_key)
-    if not is_valid:
-        flash(error_message, 'danger')
+    if not api_key:
+        flash('Please provide an API key', 'danger')
         return redirect(url_for('index'))
     
     # Create job ID
@@ -213,6 +251,70 @@ def generate_course():
     # Redirect to status page
     return redirect(url_for('job_status', job_id=job_id))
 
+@app.route('/status/<job_id>')
+def job_status(job_id):
+    """Page to view job status and results"""
+    # Check if job exists
+    if job_id not in job_statuses:
+        flash('Job not found', 'danger')
+        return redirect(url_for('index'))
+    
+    # Get job status
+    status = job_statuses[job_id]
+    
+    # Render status template
+    return render_template('status.html', job=status)
+
+@app.route('/api/status/<job_id>')
+def api_job_status(job_id):
+    """API endpoint to get job status"""
+    if job_id not in job_statuses:
+        return jsonify({'error': 'Job not found'}), 404
+    
+    return jsonify(job_statuses[job_id])
+
+@app.route('/dashboard')
+def dashboard():
+    """Dashboard to view all user's jobs"""
+    user_jobs = []
+    if 'jobs' in session:
+        for job_id in session['jobs']:
+            if job_id in job_statuses:
+                user_jobs.append(job_statuses[job_id])
+    
+    return render_template('dashboard.html', jobs=user_jobs)
+
+@app.route('/view/<job_id>')
+def view_course(job_id):
+    """Page to view a completed course"""
+    # Check if job exists and is completed
+    if job_id not in job_statuses or job_statuses[job_id]['status'] != 'completed':
+        flash('Course not found or still processing', 'warning')
+        return redirect(url_for('dashboard'))
+    
+    course = job_statuses[job_id]['course']
+    
+    # Fix any path issues with the thumbnail
+    if 'thumbnail_path' in course:
+        if not course['thumbnail_path'].startswith('/'):
+            course['thumbnail_path'] = '/' + course['thumbnail_path'].replace('\\', '/')
+    
+    return render_template('course.html', course=course, job_id=job_id)
+
+@app.route('/download/<job_id>')
+def download_course(job_id):
+    """Download the course JSON file"""
+    filename = f"course_{job_id}.json"
+    filepath = os.path.join(app.config['COURSE_FOLDER'], filename)
+    
+    if not os.path.exists(filepath):
+        flash('Course file not found', 'danger')
+        return redirect(url_for('dashboard'))
+        
+    return send_from_directory(app.config['COURSE_FOLDER'], filename, 
+                              as_attachment=True, 
+                              download_name=f"course_{job_id}.json")
+
 @app.route('/generate_module/<job_id>/<int:module_index>', methods=['POST'])
 def generate_module(job_id, module_index):
     """Generate detailed content for a specific module"""
@@ -229,11 +331,8 @@ def generate_module(job_id, module_index):
     
     # Get API key from request
     api_key = request.form.get('api_key', '')
-    
-    # Validate API key format
-    is_valid, error_message = validate_api_key(api_key)
-    if not is_valid:
-        return jsonify({'error': error_message}), 400
+    if not api_key:
+        return jsonify({'error': 'API key is required'}), 400
     
     try:
         # Create course generator
@@ -280,11 +379,77 @@ def generate_module(job_id, module_index):
         })
         
     except Exception as e:
-        logger.error(f"Error generating module: {str(e)}")
+        print(f"Error generating module: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-# Additional routes remain unchanged
-# ...
+@app.route('/view_module/<job_id>/<int:module_index>')
+def view_module(job_id, module_index):
+    """Page to view a generated module with properly rendered markdown content"""
+    # Check if job exists and is completed
+    if job_id not in job_statuses or job_statuses[job_id]['status'] != 'completed':
+        flash('Course not found or still processing', 'warning')
+        return redirect(url_for('dashboard'))
+    
+    # Get course data
+    course = job_statuses[job_id]['course']
+    
+    # Check if module index is valid
+    if module_index < 0 or module_index >= len(course['modules']):
+        flash('Invalid module index', 'danger')
+        return redirect(url_for('view_course', job_id=job_id))
+    
+    # Check if module content has been generated
+    if 'module_contents' in course and str(module_index) in course['module_contents']:
+        # Module content already exists in the course object
+        module_content = course['module_contents'][str(module_index)]
+    elif ('module_contents' in job_statuses[job_id] and 
+          str(module_index) in job_statuses[job_id]['module_contents']):
+        # Module content exists in job status but not in course object
+        module_content = job_statuses[job_id]['module_contents'][str(module_index)]
+        # Update course object
+        if 'module_contents' not in course:
+            course['module_contents'] = {}
+        course['module_contents'][str(module_index)] = module_content
+    else:
+        # Module content not generated yet
+        return render_template('generate_module.html', 
+                              course=course, 
+                              module=course['modules'][module_index],
+                              module_index=module_index,
+                              job_id=job_id)
+    
+    # Pre-render markdown content for introduction
+    if 'introduction' in module_content:
+        module_content['introduction_html'] = render_markdown(module_content['introduction'])
+    
+    # Pre-render markdown content for each lesson
+    if 'lessons' in module_content:
+        for lesson in module_content['lessons']:
+            if 'content' in lesson:
+                lesson['content_html'] = render_markdown(lesson['content'])
+            if 'assessment' in lesson:
+                lesson['assessment_html'] = render_markdown(lesson['assessment'])
+    
+    return render_template('module.html', 
+                          course=course,
+                          module=module_content,
+                          module_index=module_index,
+                          job_id=job_id)
+
+@app.route('/about')
+def about():
+    """About page with information about the application"""
+    return render_template('about.html')
+
+@app.errorhandler(404)
+def page_not_found(e):
+    """Handle 404 errors"""
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    """Handle 500 errors"""
+    return render_template('500.html'), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
